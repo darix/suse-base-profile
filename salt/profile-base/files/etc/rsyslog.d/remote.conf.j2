@@ -10,10 +10,6 @@
 ## [The modules are linked against libraries installed bellow of
 ##  /usr thus also installed in /usr/lib*/rsyslog because of this.]
 ##
-{%- set ca_file = "/usr/share/pki/trust/anchors/step-ca-ibs.crt.pem" %}
-{%- if pillar.salt_cluster == "obs-admin" %}
-  {%- set ca_file = "/usr/share/pki/trust/anchors/step-ca-obs.crt.pem" %}
-{%- endif %}
 
 {%-   if 'remote_host' in pillar.syslog %}
 {%- set remote_host  = pillar.syslog.remote_host %}
@@ -73,7 +69,9 @@ action(
   {%- if "client_cert_path" in pillar.syslog %}
   tls.myCert="{{ pillar.syslog.client_cert_path }}"
   {%- endif %}
-  tls.caCert="{{ ca_file }}"
+  {%- if "ca_file" in pillar.syslog %}
+  tls.caCert="{{ pillar.syslog.ca_file }}"
+  {%- endif %}
 )
 {%-     endif %}
 
@@ -114,7 +112,9 @@ action(
   {%- if "client_cert_path" in pillar.syslog %}
   tls.myCert="{{ pillar.syslog.client_cert_path }}"
   {%- endif %}
-  tls.caCert="{{ ca_file }}"
+  {%- if "ca_file" in pillar.syslog %}
+  tls.caCert="{{ pillar.syslog.ca_file }}"
+  {%- endif %}
 )
 {%- else %}
   action(type="omfwd" Target="{{ remote_host }}" Port="514" Protocol="tcp" )
@@ -153,7 +153,9 @@ input(
   type="imrelp" port="{{ relp_port }}"
   # can not use address parameter here as our librelp is too old
   tls="on"
-  tls.caCert="{{ ca_file }}"
+  {%- if "ca_file" in pillar.syslog %}
+  tls.caCert="{{ pillar.syslog.ca_file }}"
+  {%- endif %}
 
   {%- if "server_cert_path" in pillar.syslog %}
   {%-   set server_cert_path = pillar.syslog.server_cert_path %}
