@@ -35,7 +35,7 @@ def guess_repository(baseurl):
         repository_list.append("openSUSE_Tumbleweed")
         repository_list.append("openSUSE_Factory")
     else:
-        log.error("Do know know how to handle distro {distro}".format(distro=osfullname))
+        log.error("Do not know how to handle distro {distro}".format(distro=osfullname))
 
     repomd_path = 'repodata/repomd.xml'
 
