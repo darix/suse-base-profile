@@ -1,0 +1,11 @@
+#!/bin/bash
+
+for hostname in "$@" ; do
+  echo "Handling host $hostname ... pinging first ... output following:"
+  if salt "$hostname" test.ping ; then
+    echo "Refresh pillar data on minion $hostname ... output following:"
+    salt "$hostname" saltutil.refresh_pillar
+    echo "Clear all other caches and update data on minion $hostname ... output following:"
+    salt "$hostname" state.apply profile.base.sync-salt-information
+  fi
+done
