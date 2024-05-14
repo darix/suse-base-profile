@@ -5,10 +5,17 @@ dracut_nowaitforswap:
     - repl: "nowaitforswap=yes"
     - append_if_not_found: True
 
+
+{%- set changed_settings = [] %}
+
 {%- if 'grub' in pillar %}
+
 {%- for setting, value in pillar.grub.items() %}
 
-grub_{{ setting }}:
+{%- set section = "grub_" ~ setting %}
+{%- do changed_settings.append(section) %}
+
+{{ section }}:
   file.replace:
     - name: /etc/default/grub
     - pattern: GRUB_{{ setting | upper }}=.*
@@ -22,5 +29,7 @@ grub_rebuild_config:
   cmd.run:
     - name: /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
     - onchanges:
-      - file: /etc/dracut.conf
-      - file: /etc/default/grub
+      - dracut_nowaitforswap
+      {%- for changed_setting in changed_settings %}
+      - {{ changed_setting }}
+      {%- endfor %}

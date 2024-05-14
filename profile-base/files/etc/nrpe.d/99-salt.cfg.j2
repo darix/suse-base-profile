@@ -1,3 +1,4 @@
+{%- if "monitoring" in pillar and "checks" in pillar.monitoring %}
 {%- set check_basedir = '/usr/lib/nagios/plugins' %}
 {%- for check, check_data in pillar.monitoring.checks.items() %}
   {%- set cmd = check %}
@@ -34,3 +35,4 @@ command[{{ check }}]={{ cmd }} {{ args }}
   {%- set args = ' -i ' ~ interface ~ ' -w 3G -C 6G -b 10G' %}
 command[{{ check }}]={{ cmd }} {{ args }}
 {%- endfor %}
+{%- endif %}

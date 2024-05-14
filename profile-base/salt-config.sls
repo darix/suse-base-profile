@@ -14,7 +14,7 @@ master_drop_in:
     - template: jinja
     - names:
        - /etc/salt/master.d/salt_managed.conf:
-         - source: salt://profile/base/files/etc/salt/master.d.config.j2
+         - source: salt://{{ slspath }}/files/etc/salt/master.d.config.j2
 
 salt_master_cert_refresh_cronjob:
   file.managed:
@@ -62,7 +62,7 @@ minion_drop_in:
     - template: jinja
     - names:
        - /etc/salt/minion.d/salt_managed.conf:
-         - source: salt://profile/base/files/etc/salt/minion.d.config.j2
+         - source: salt://{{ slspath }}/files/etc/salt/minion.d.config.j2
     - require:
       - salt_minion_pkg_installed
 {%- endif %}

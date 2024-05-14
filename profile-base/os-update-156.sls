@@ -1,3 +1,4 @@
+{%- if grains.osfullname == 'Leap' %}
 os_release:
     file.managed:
     - user: root
@@ -5,4 +6,5 @@ os_release:
     - mode: '0644'
     - names:
       - /etc/os-release:
-        - source: salt://profile/base/files/etc/os-release-15.6
+        - source: salt://{{ slspath }}/files/etc/os-release-15.6
+{%- endif %}

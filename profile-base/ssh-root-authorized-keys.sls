@@ -13,5 +13,5 @@ ssh-root-authorized-keys:
     - template: jinja
     - names:
       - /root/.ssh/authorized_keys:
-        - source: salt://profile/base/files/root/.ssh/authorized_keys.j2
+        - source: salt://{{ slspath }}/files/root/.ssh/authorized_keys.j2
 

@@ -42,13 +42,16 @@ nrpe_d_config:
     - group: root
     - mode: '0644'
     - template: jinja
+    - require:
+      - monitoring_packages
     - names:
       - /etc/nrpe.d/zzz-salt.cfg:
-        - source: salt://profile/base/files/etc/nrpe.d/99-salt.cfg.j2
+        - source: salt://{{ slspath }}/files/etc/nrpe.d/99-salt.cfg.j2
 
 nrpe_config:
   file.replace:
     - name: /etc/nrpe.cfg
+    - ignore_if_missing: True
     - pattern: '^(# *)?allowed_hosts=.*'
 {%- if 'monitoring' in pillar and 'server' in pillar.monitoring and 'addresses' in pillar.monitoring.server %}
     - repl: allowed_hosts={{ pillar.monitoring.server.addresses|join(',') }}
@@ -64,9 +67,11 @@ nrpe_sudo_rules:
     - group: root
     - mode: '0400'
     - template: jinja
+    - require:
+      - monitoring_packages
     - names:
       - /etc/sudoers.d/99-salt-monitoring:
-        - source: salt://profile/base/files/etc/sudoers.d/99-salt-monitoring.j2
+        - source: salt://{{ slspath }}/files/etc/sudoers.d/99-salt-monitoring.j2
 
 nrpe_service:
   service.running:

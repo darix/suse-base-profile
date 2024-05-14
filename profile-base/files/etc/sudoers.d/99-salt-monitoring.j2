@@ -1,4 +1,6 @@
+{%- if "greeting" in pillar %}
 # {{ pillar.greeting }}
+{%- endif %}
 nagios  ALL=(ALL) NOPASSWD:\
 {%- if grains.virtual == 'physical' %}
     /usr/bin/ipmitool,\

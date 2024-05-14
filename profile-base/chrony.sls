@@ -18,7 +18,7 @@ chrony_config:
       - chrony_package
     - names:
       - /etc/chrony.conf:
-        - source: salt://profile/base/files/etc/chrony.conf.j2
+        - source: salt://{{ slspath }}/files/etc/chrony.conf.j2
 
 chrony_service:
   service.running:

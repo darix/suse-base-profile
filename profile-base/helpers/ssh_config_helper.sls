@@ -22,6 +22,7 @@
 {%- endmacro %}
 
 {%- macro ssh_config_option(option_name, default_value=None) %}
+  {%- set option_value = None %}
   {%- if 'ssh' in pillar %}
     {%- set option_value = pillar.ssh.get(option_name, default_value) %}
   {%- endif %}

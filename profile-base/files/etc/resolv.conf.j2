@@ -1,9 +1,15 @@
+{%- if "greeting" in pillar %}
 # {{ pillar.greeting }}
+{%- endif %}
 
-search {{ salt['pillar.get']('network:resolver:config:searchlist', pillar.network.resolver.defaults.searchlist) | join(' ') }}
+{%- if "config" in pillar.network.resolver %}
+{%-   if "serachlist" in pillar.network.resolver.config %}
+search {{ pillar.network.resolver.config.searchlist | join(' ') }}
+{%- endif %}
 {%- if 'nameservers' in pillar.network.resolver.config %}
 {%-   for nameserver in (pillar.network.resolver.config.nameservers | reverse | list)[0:3] %}
 nameserver {{ nameserver }}
 {%-   endfor %}
 {%- endif %}
-options {{ salt['pillar.get']('network:resolver:config:options', pillar.network.resolver.defaults.options) | join(' ') }}
+options {{ salt['pillar.get']('network:resolver:config:options', default_options) | join(' ') }}
+{%- endif %}

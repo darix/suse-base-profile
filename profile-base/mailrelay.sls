@@ -1,19 +1,12 @@
-{%- from './helpers/ssh_config_helper.sls' import ssh_handle_boolean  %}
+{%- from 'profile-base/helpers/ssh_config_helper.sls' import ssh_handle_boolean  %}
 
 postfix_package:
   pkg.installed:
     - names:
       - postfix
 
+{%- set changed_settings = [] %}
 {%- if 'mail' in pillar %}
-
-{%- if 'relay' in pillar.mail %}
-postfix_sysconfig_relayhost:
-  file.replace:
-    - name: /etc/sysconfig/postfix
-    - pattern: POSTFIX_RELAYHOST=".*"
-    - repl: POSTFIX_RELAYHOST="[{{ pillar.mail.relay }}]"
-{%- endif %}
 
 {%- if "myhostname" in pillar.mail %}
 {%- set myhostname = pillar.mail.myhostname %}
@@ -39,6 +32,16 @@ postfix_sysconfig_relayhost:
 {%- set listen_remote = "no" %}
 {%- endif %}
 
+{%- if 'relay' in pillar.mail %}
+{%- do changed_settings.append("postfix_sysconfig_relayhost") %}
+postfix_sysconfig_relayhost:
+  file.replace:
+    - name: /etc/sysconfig/postfix
+    - pattern: POSTFIX_RELAYHOST=".*"
+    - repl: POSTFIX_RELAYHOST="[{{ pillar.mail.relay }}]"
+{%- endif %}
+
+{%- do changed_settings.append("postfix_sysconfig_myhostname") %}
 postfix_sysconfig_myhostname:
   file.replace:
     - name: /etc/sysconfig/postfix
@@ -47,6 +50,7 @@ postfix_sysconfig_myhostname:
     - append_if_not_found: True
 
 {%- if 'masquerade_domain' in pillar.mail %}
+{%- do changed_settings.append("postfix_sysconfig_masquerade_domain") %}
 postfix_sysconfig_masquerade_domain:
   file.replace:
     - name: /etc/sysconfig/postfix
@@ -54,6 +58,7 @@ postfix_sysconfig_masquerade_domain:
     - repl: POSTFIX_MASQUERADE_DOMAIN="{{ pillar.mail.masquerade_domain }}"
 {%- endif %}
 
+{%- do changed_settings.append("postfix_sysconfig_masquerade_exceptions") %}
 postfix_sysconfig_masquerade_exceptions:
   file.replace:
     - name: /etc/sysconfig/postfix
@@ -61,6 +66,7 @@ postfix_sysconfig_masquerade_exceptions:
     - repl: POSTFIX_ADD_MASQUERADE_EXCEPTIONS=""
     - append_if_not_found: True
 
+{%- do changed_settings.append("postfix_sysconfig_mynetworks") %}
 postfix_sysconfig_mynetworks:
   file.replace:
     - name: /etc/sysconfig/postfix
@@ -68,12 +74,14 @@ postfix_sysconfig_mynetworks:
     - repl: POSTFIX_ADD_MYNETWORKS_STYLE="{{ mynetworks_style }}"
     - append_if_not_found: True
 
+{%- do changed_settings.append("postfix_sysconfig_mail_from_header") %}
 postfix_sysconfig_mail_from_header:
   file.replace:
     - name: /etc/sysconfig/mail
     - pattern: FROM_HEADER=".*"
     - repl: FROM_HEADER="{{ from_header }}"
 
+{%- do changed_settings.append("postfix_sysconfig_mail_listen_remote") %}
 postfix_sysconfig_mail_listen_remote:
   file.replace:
     - name: /etc/sysconfig/mail
@@ -104,11 +112,27 @@ postfix_service:
     - name: postfix
     - enable: True
     - reload: True
-    - watch:
-      - file: /etc/sysconfig/mail
-      - file: /etc/sysconfig/postfix
+    - require:
+      - postfix_package
+      {%- if changed_settings|length > 0 %}
+      {%- for changed_setting in changed_settings %}
+      - {{ changed_setting }}
+      {%- endfor %}
+    - onchanges:
+      {%- for changed_setting in changed_settings %}
+      - {{ changed_setting }}
+      {%- endfor %}
+      {%- endif %}
   cmd.run:
     - name: /usr/sbin/config.postfix
+    - require:
+      - postfix_package
+      {%- if changed_settings|length > 0 %}
+      {%- for changed_setting in changed_settings %}
+      - {{ changed_setting }}
+      {%- endfor %}
     - onchanges:
-      - file: /etc/sysconfig/mail
-      - file: /etc/sysconfig/postfix
+      {%- for changed_setting in changed_settings %}
+      - {{ changed_setting }}
+      {%- endfor %}
+      {%- endif %}

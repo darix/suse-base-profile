@@ -7,7 +7,7 @@ etc_hosts:
     - template: jinja
     - names:
       - /etc/hosts:
-        - source: salt://profile/base/files/etc/hosts.j2
+        - source: salt://{{ slspath }}/files/etc/hosts.j2
   cmd.run:
     - name: /usr/bin/systemctl reload dnsmasq.service
     - onlyif: /usr/bin/systemctl is-active dnsmasq.service

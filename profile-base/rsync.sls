@@ -12,7 +12,7 @@ rsyncd_config:
     - template: jinja
     - names:
       - /etc/rsyncd.conf:
-        - source: salt://profile/base/files/etc/rsyncd.conf.j2
+        - source: salt://{{ slspath }}/files/etc/rsyncd.conf.j2
 
 rsyncd_secrets:
   file.managed:
@@ -22,7 +22,7 @@ rsyncd_secrets:
     - template: jinja
     - names:
       - /etc/rsyncd.secrets:
-        - source: salt://profile/base/files/etc/rsyncd.secrets.j2
+        - source: salt://{{ slspath }}/files/etc/rsyncd.secrets.j2
 
 rsyncd_service:
   service.running:

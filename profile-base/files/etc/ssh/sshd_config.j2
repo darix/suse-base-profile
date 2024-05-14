@@ -1,6 +1,8 @@
-{%- from 'helpers/ssh_config_helper.sls' import ssh_config_option  %}
-{%- from 'helpers/ssh_config_helper.sls' import ssh_config_match_options %}
+{%- from 'profile-base/helpers/ssh_config_helper.sls' import ssh_config_option  %}
+{%- from 'profile-base/helpers/ssh_config_helper.sls' import ssh_config_match_options %}
+{%- if 'greeting' in pillar %}
 # {{- pillar.greeting }}
+{%- endif %}
 #       $OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
 
 # This is the sshd server system-wide configuration file.  See

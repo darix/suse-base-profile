@@ -3,6 +3,13 @@ openssh_package:
      - names:
        - openssh
 
+# TODO: add support for ALP and friends
+{%- if grains.osfullname == "openSUSE Tumbleweed" %}
+{%- set config_path = "/etc/ssh/sshd_config.d/99-salt.conf" %}
+{%- else %}
+{%- set config_path = "/etc/ssh/sshd_config" %}
+{%- endif %}
+
 openssh_config:
   file.managed:
     - user: root
@@ -10,8 +17,8 @@ openssh_config:
     - mode: '0600'
     - template: jinja
     - names:
-      - /etc/ssh/sshd_config:
-        - source: salt://profile/base/files/etc/ssh/sshd_config.j2
+      - {{ config_path }}:
+        - source: salt://{{ slspath }}/files/etc/ssh/sshd_config.j2
 
 openssh_service:
   service.running:

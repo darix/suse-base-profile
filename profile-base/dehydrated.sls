@@ -87,7 +87,7 @@ dehydrated_config_config_d_salt:
       - dehydrated_config_config_d
     - names:
       - /etc/dehydrated/config.d/99-salt.sh:
-        - source: salt://profile/base/files/etc/dehydrated/config.d/99-salt.sh.j2
+        - source: salt://{{ slspath }}/files/etc/dehydrated/config.d/99-salt.sh.j2
 #/ if config
 {%-     endif %}
 
@@ -102,7 +102,7 @@ dehydrated_domains:
       - dehydrated_domains_d
     - names:
       - /etc/dehydrated/salt-domains.txt:
-        - source: salt://profile/base/files/etc/dehydrated/domains.txt.j2
+        - source: salt://{{ slspath }}/files/etc/dehydrated/domains.txt.j2
 
 {%-     for certname, certdata in pillar.dehydrated.certs.items() %}
 
@@ -158,7 +158,7 @@ dehydrated_generic_hooks:
     - mode: '0750'
     - names:
       - /etc/dehydrated/hooks.sh:
-        - source: salt://profile/base/files/etc/dehydrated/hooks.sh
+        - source: salt://{{ slspath }}/files/etc/dehydrated/hooks.sh
 
 {%- if cert_services|length > 0 or cert_postrunhooks|length >0 or cert_acls|length >0 %}
 dehydrated_postrunhooks_hooks:

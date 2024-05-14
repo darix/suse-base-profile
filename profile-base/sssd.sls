@@ -22,7 +22,7 @@ sssd_config:
     - template: jinja
     - names:
       - /etc/sssd/conf.d/salt.conf:
-        - source: salt://profile/base/files/etc/sssd/conf.d/salt.conf.j2
+        - source: salt://{{ slspath }}/files/etc/sssd/conf.d/salt.conf.j2
 
 sssd_pam_enable:
   cmd.run:
