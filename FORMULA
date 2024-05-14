@@ -6,4 +6,4 @@ release: 1
 minimum_version: 3000.0
 summary: Very opinionated base profile for SUSE based machines
 description: Formula to configure basic things for a SUSE based machine
-top_level_dir: profile-base
+top_level_dir: salt/profile-base
