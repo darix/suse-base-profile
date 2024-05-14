@@ -1,0 +1,53 @@
+# Use public servers from the pool.ntp.org project.
+# Please consider joining the pool (http://www.pool.ntp.org/join.html).
+{%- if 'ntp' in pillar and 'server' in pillar.ntp %}
+{%- for server in pillar.ntp.server %}
+server {{ server }} iburst
+{%- endfor %}
+{%- else %}
+{%- for counter in [1,2] %}
+server ntp{{ counter }}.{{ grains.domain }} iburst {%- if counter == 1 %} prefer {%- endif %}
+{%- endfor %}
+{%- endif %}
+
+{%- if 'ntp' in pillar and 'allow' in pillar.ntp %}
+{%- for allow in pillar.ntp.allow %}
+allow {{ allow }}
+{%- endfor %}
+{%- endif %}
+{%- if 'ntp' in pillar and 'bindaddress' in pillar.ntp %}
+{%- for bindaddress in pillar.ntp.bindaddress %}
+bindaddress {{ bindaddress }}
+{%- endfor %}
+{%- endif %}
+{%- if 'ntp' in pillar and 'pool' in pillar.ntp %}
+{%- for pool in pillar.ntp.pool %}
+pool {{ pool }} iburst
+{%- endfor %}
+{%- endif %}
+
+# Record the rate at which the system clock gains/losses time.
+driftfile /var/lib/chrony/drift
+
+# In first three updates step the system clock instead of slew
+# if the adjustment is larger than 1 second.
+{%- if grains.virtual == 'kvm' %}
+makestep -1 1
+{%- else %}
+makestep 1.0 3
+{%- endif %}
+
+# Enable kernel synchronization of the real-time clock (RTC).
+rtcsync
+
+# Serve time even if not synchronized to any NTP server.
+local stratum 10
+
+# Specify file containing keys for NTP authentication.
+keyfile /etc/chrony.keys
+
+# Specify directory for log files.
+logdir /var/log/chrony
+
+# Select which information is logged.
+log measurements statistics tracking

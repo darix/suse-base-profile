@@ -1,0 +1,9 @@
+# {{ pillar.greeting }}
+
+search {{ salt['pillar.get']('network:resolver:config:searchlist', pillar.network.resolver.defaults.searchlist) | join(' ') }}
+{%- if 'nameservers' in pillar.network.resolver.config %}
+{%-   for nameserver in (pillar.network.resolver.config.nameservers | reverse | list)[0:3] %}
+nameserver {{ nameserver }}
+{%-   endfor %}
+{%- endif %}
+options {{ salt['pillar.get']('network:resolver:config:options', pillar.network.resolver.defaults.options) | join(' ') }}

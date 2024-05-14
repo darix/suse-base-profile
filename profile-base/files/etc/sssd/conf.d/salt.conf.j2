@@ -1,0 +1,34 @@
+[sssd]
+config_file_version = 2
+{%- if 'sssd' in pillar and 'autofs' in pillar.sssd and pillar.sssd.autofs %}
+services = nss, pam, autofs
+{%- else %}
+services = nss, pam
+{%- endif %}
+
+domains = {{ pillar.sssd.domain }}
+
+[nss]
+filter_users = root
+filter_groups = root
+
+[domain/{{ pillar.sssd.domain }}]
+id_provider = ldap
+autofs_provider = ldap
+auth_provider = ldap
+chpass_provider = ldap
+ldap_schema = rfc2307
+ldap_uri = {{ pillar.sssd.ldap_url }}
+cache_credentials = True
+ldap_search_base = {{ pillar.sssd.ldap_base }}
+ldap_tls_cacertdir = /etc/ssl/certs
+ldap_tls_cacert = {{ pillar.sssd.ldap_cert }}
+{%- if 'sssd' in pillar and 'autofs' in pillar.sssd and pillar.sssd.autofs %}
+ldap_autofs_map_master_name = auto.master
+ldap_autofs_map_object_class = nisMap
+ldap_autofs_map_name = nisMapName
+ldap_autofs_entry_object_class = nisObject
+ldap_autofs_entry_key = cn
+ldap_autofs_entry_value = nisMapEntry
+{%- endif %}
+

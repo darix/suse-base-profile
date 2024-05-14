@@ -1,0 +1,8 @@
+# {{ pillar.greeting }}
+nagios  ALL=(ALL) NOPASSWD:\
+{%- if grains.virtual == 'physical' %}
+    /usr/bin/ipmitool,\
+    /usr/sbin/smartctl,\
+{%- endif %}
+    /usr/sbin/suse-online-update, \
+    /etc/cron.daily/suse.de-abuild-online-update

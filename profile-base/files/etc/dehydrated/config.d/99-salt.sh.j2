@@ -1,0 +1,10 @@
+{%- set ignored_settings = ['DOMAINS_TXT', 'DOMAINS_D' ] %}
+{%- for key, value in pillar.dehydrated.config.items() %}
+{%- set setting = key|upper %}
+{%- if not(setting in ignored_settings) %}
+{{ setting }}="{{ value }}"
+{%- endif %}
+{%- endfor %}
+DOMAINS_TXT="${BASEDIR}/salt-domains.txt"
+DOMAINS_D="${BASEDIR}/domains.d/"
+RENEW_DAYS="14"

@@ -1,0 +1,12 @@
+{%- if 'check_zypper' in  pillar.zypp %}
+  {%- if 'patch' in pillar.zypp.check_zypper %}
+    {%- for entry in pillar.zypp.check_zypper.patch | sort %}
+patch:{{ entry }}
+    {%- endfor %}
+  {%- endif %}
+  {%- if 'whitelist' in pillar.zypp.check_zypper %}
+    {%- for entry in pillar.zypp.check_zypper.whitelist | sort %}
+whitelist:{{ entry }}
+    {%- endfor %}
+  {%- endif %}
+{% endif %}

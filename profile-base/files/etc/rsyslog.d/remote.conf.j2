@@ -1,0 +1,213 @@
+## {{ pillar.greeting }}
+##
+## === When you're using remote logging, enable on-disk queues ===
+## === in rsyslog.d/remote.conf.                               ===
+##
+## Note, that when the MYSQL, PGSQL, GSSAPI, GnuTLS or SNMP modules
+## (provided in separate rsyslog-module-* packages) are enabled, the
+## configuration can't be used on a system with /usr on a remote
+## filesystem, except on newer systems where initrd mounts /usr.
+## [The modules are linked against libraries installed bellow of
+##  /usr thus also installed in /usr/lib*/rsyslog because of this.]
+##
+{%- set ca_file = "/usr/share/pki/trust/anchors/step-ca-ibs.crt.pem" %}
+{%- if pillar.salt_cluster == "obs-admin" %}
+  {%- set ca_file = "/usr/share/pki/trust/anchors/step-ca-obs.crt.pem" %}
+{%- endif %}
+
+{%-   if 'remote_host' in pillar.syslog %}
+{%- set remote_host  = pillar.syslog.remote_host %}
+{%    else %}
+{%- set remote_host = pillar.syslog.remote ~ '.' ~ grains.domain %}
+{%-   endif %}
+
+
+# ######### Enable On-Disk queues for remote logging ##########
+#
+# An on-disk queue is created for this action. If the remote host is
+# down, messages are spooled to disk and sent when it is up again.
+#
+{%- if 'log_to_remote' in pillar.syslog and pillar.syslog.log_to_remote %}
+$WorkDirectory              {{ pillar.syslog.config['$WorkDirectory'] }}              # where to place spool files
+$ActionQueueFileName        {{ pillar.syslog.config['$ActionQueueFileName'] }}        # unique name prefix for spool files
+$ActionQueueMaxDiskSpace    {{ pillar.syslog.config['$ActionQueueMaxDiskSpace'] }}    # 1gb space limit (use as much as possible)
+$ActionQueueSaveOnShutdown  {{ pillar.syslog.config['$ActionQueueSaveOnShutdown'] }}  # save messages to disk on shutdown
+$ActionQueueType            {{ pillar.syslog.config['$ActionQueueType'] }}            # run asynchronously
+$ActionResumeRetryCount     {{ pillar.syslog.config['$ActionResumeRetryCount'] }}     # infinite retries if host is down
+{%- endif %}
+
+# ######### Sending Messages to Remote Hosts ##########
+
+# Remote Logging using TCP for reliable delivery
+# remote host is: name/ip:port, e.g. 192.168.0.1:514, port optional
+#*.* @@remote-host
+
+# Remote Logging using UDP
+# remote host is: name/ip:port, e.g. 192.168.0.1:514, port optional
+#*.* @remote-host
+{%- set relp_port = 515 %}
+module(
+  load="omrelp"
+  # force openssl library
+  tls.tlslib="openssl"
+)
+
+{%- if 'log_to_remote' in pillar.syslog and pillar.syslog.log_to_remote %}
+
+{%-   if "remote_protocol" in pillar.syslog %}
+
+{%-     if "udp" == pillar.syslog.remote_protocol %}
+*.* @{{ remote_host }}
+{%-     endif %}
+
+{%-     if "tcp" == pillar.syslog.remote_protocol %}
+*.* @@{{ remote_host }}
+{%-     endif %}
+
+{%-     if "relp" == pillar.syslog.remote_protocol %}
+action(
+  type="omrelp"
+  target="{{ remote_host }}"
+  port="{{ relp_port }}"
+  tls="on"
+  {%- if "client_cert_path" in pillar.syslog %}
+  tls.myCert="{{ pillar.syslog.client_cert_path }}"
+  {%- endif %}
+  tls.caCert="{{ ca_file }}"
+)
+{%-     endif %}
+
+{%-   else %}
+*.* @@{{ remote_host }}
+{%-   endif %}
+
+{%- endif %}
+
+# ######### Receiving Messages from Remote Hosts ##########
+# TCP Syslog Server:
+# provides TCP syslog reception and GSS-API (if compiled to support it)
+#$ModLoad imtcp.so         # load module
+##$UDPServerAddress 10.10.0.1 # force to listen on this IP only
+#$InputTCPServerRun <port> # Starts a TCP server on selected port
+
+# UDP Syslog Server:
+#$ModLoad imudp.so         # provides UDP syslog reception
+##$UDPServerAddress 10.10.0.1 # force to listen on this IP only
+#$UDPServerRun 514         # start a UDP syslog server at standard port 514
+
+template(name="DynFile" type="string" string="{{ pillar.syslog.remote_basedir }}/%HOSTNAME%.log")
+
+{%- if 'listen' in pillar.syslog and 'enable' in pillar.syslog.listen and pillar.syslog.listen.enable %}
+ruleset(name="remote_to_file") {
+  action(type="omfile" dirCreateMode="0700" FileCreateMode="0600" DynaFile="DynFile")
+  stop
+}
+
+ruleset(name="remote_forward") {
+{%-   if "remote_protocol" in pillar.syslog %}
+{%-     if "relp" == pillar.syslog.remote_protocol %}
+action(
+  type="omrelp"
+  target="{{ remote_host }}"
+  port="{{ relp_port }}"
+  tls="on"
+  {%- if "client_cert_path" in pillar.syslog %}
+  tls.myCert="{{ pillar.syslog.client_cert_path }}"
+  {%- endif %}
+  tls.caCert="{{ ca_file }}"
+)
+{%- else %}
+  action(type="omfwd" Target="{{ remote_host }}" Port="514" Protocol="tcp" )
+{%-   endif %}
+{%- endif %}
+  stop
+}
+
+{%- for protocol in ['imptcp', 'imudp'] %}
+module(load="{{ protocol }}")
+input(
+  type="{{ protocol }}"
+  port="514"
+  {%- if 'bind_address' in pillar.syslog.listen %}
+  address="{{ pillar.syslog.listen.bind_address }}"
+  {%- endif %}
+  {%- if 'log_to_remote' in pillar.syslog and pillar.syslog.log_to_remote %}
+  ruleset = "remote_forward"
+  {%- else %}
+  ruleset = "remote_to_file"
+  {%- endif %}
+)
+{%- endfor %}
+
+module(
+  load="imrelp"
+  # force openssl library
+  tls.tlslib="openssl"
+  {%- if 'log_to_remote' in pillar.syslog and pillar.syslog.log_to_remote %}
+  ruleset = "remote_forward"
+  {%- else %}
+  ruleset = "remote_to_file"
+  {%- endif %}
+)
+input(
+  type="imrelp" port="{{ relp_port }}"
+  # can not use address parameter here as our librelp is too old
+  tls="on"
+  tls.caCert="{{ ca_file }}"
+
+  {%- if "server_cert_path" in pillar.syslog %}
+  {%-   set server_cert_path = pillar.syslog.server_cert_path %}
+  {%- else %}
+  {%-   set server_cert_path = "/etc/step/certs/generic.host.full.pem" %}
+  {%- endif %}
+
+  {%- if 'bind_address' in pillar.syslog.listen %}
+  address="{{ pillar.syslog.listen.bind_address }}"
+  {%- endif %}
+
+  tls.myCert="{{ server_cert_path }}"
+  tls.myPrivKey="{{ server_cert_path }}"
+  # can not use authentication yet as it seems to cause problems with our gnutls or librelp version
+  {%- if 'require_valid_cert' in pillar.syslog and pillar.syslog.require_valid_cert %}
+  tls.authMode="certvalid"
+  {%- endif %}
+# optionally we can limit which hosts can talk to us by
+# https://www.rsyslog.com/doc/master/concepts/ns_gtls.html#supported-authentication-modes
+# e.g.
+  {%- if 'ssl_allowed_hosts_list' in pillar.syslog %}
+  tls.authMode="name"
+  tls.permittedpeer=[
+  {%-   for host in pillar.syslog.ssl_allowed_hosts_list %}
+    "{{ host }}",
+  {%-   endfor %}
+  ]
+  {%- endif %}
+)
+{%- endif %}
+
+########### Encrypting Syslog Traffic with TLS ##########
+# -- TLS Syslog Server:
+## make gtls driver the default
+#$DefaultNetstreamDriver gtls
+#
+## certificate files
+#$DefaultNetstreamDriverCAFile /etc/rsyslog.d/ca.pem
+#$DefaultNetstreamDriverCertFile /etc/rsyslog.d/server_cert.pem
+#$DefaultNetstreamDriverKeyFile /etc/rsyslog.d/server_key.pem
+#
+#$ModLoad imtcp # load TCP listener
+#
+#$InputTCPServerStreamDriverMode 1 # run driver in TLS-only mode
+#$InputTCPServerStreamDriverAuthMode anon # client is NOT authenticated
+#$InputTCPServerRun 10514 # start up listener at port 10514
+#
+# -- TLS Syslog Client:
+## certificate files - just CA for a client
+#$DefaultNetstreamDriverCAFile /etc/rsyslog.d/ca.pem
+#
+## set up the action
+#$DefaultNetstreamDriver gtls # use gtls netstream driver
+#$ActionSendStreamDriverMode 1 # require TLS for the connection
+#$ActionSendStreamDriverAuthMode anon # server is NOT authenticated
+#*.* @@(o)server.example.net:10514 # send (all) messages
+

@@ -1,0 +1,248 @@
+{%- from 'helpers/ssh_config_helper.sls' import ssh_config_option  %}
+{%- from 'helpers/ssh_config_helper.sls' import ssh_config_match_options %}
+# {{- pillar.greeting }}
+#       $OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
+
+# This is the sshd server system-wide configuration file.  See
+# sshd_config(5) for more information.
+
+# This sshd was compiled with PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+# The strategy used for options in the default sshd_config shipped with
+# OpenSSH is to specify options with their default value where
+# possible, but leave them commented.  Uncommented options override the
+# default value.
+
+#Port 22
+{{- ssh_config_option('Port') }}
+#AddressFamily any
+{{- ssh_config_option('AddressFamily') }}
+#ListenAddress 0.0.0.0
+#ListenAddress ::
+{{- ssh_config_option('ListenAddress') }}
+
+#HostKey /etc/ssh/ssh_host_rsa_key
+#HostKey /etc/ssh/ssh_host_ecdsa_key
+#HostKey /etc/ssh/ssh_host_ed25519_key
+{{- ssh_config_option('HostKey') }}
+{{- ssh_config_option('HostCertificate') }}
+{{- ssh_config_option('Agent') }}
+
+# Ciphers and keying
+#RekeyLimit default none
+{{- ssh_config_option('RekeyLimit') }}
+{{- ssh_config_option('Ciphers') }}
+{{- ssh_config_option('HostKeyAlgorithms') }}
+{{- ssh_config_option('KexAlgorithms') }}
+{{- ssh_config_option('MACs') }}
+{{- ssh_config_option('PubkeyAcceptedKeyTypes') }}
+{{- ssh_config_option('FingerprintHash') }}
+
+
+# Logging
+#SyslogFacility AUTH
+{{- ssh_config_option('SyslogFacility') }}
+#LogLevel INFO
+{{- ssh_config_option('LogLevel') }}
+
+# Authentication:
+
+#LoginGraceTime 2m
+{{- ssh_config_option('LoginGraceTime') }}
+#PermitRootLogin no
+{{- ssh_config_option('PermitRootLogin') }}
+#StrictModes yes
+{{- ssh_config_option('StrictModes') }}
+#MaxAuthTries 6
+{{- ssh_config_option('MaxAuthTries') }}
+#MaxSessions 10
+{{- ssh_config_option('MaxSessions') }}
+
+#PubkeyAuthentication yes
+{{- ssh_config_option('PubkeyAuthentication') }}
+
+# The default is to check both .ssh/authorized_keys and .ssh/authorized_keys2
+# but this is overridden so installations will only check .ssh/authorized_keys
+{{- ssh_config_option('AuthorizedKeysFile', '.ssh/authorized_keys') }}
+
+#AuthorizedPrincipalsFile none
+{{- ssh_config_option('AuthorizedPrincipalsFile') }}
+
+#AuthorizedKeysCommand none
+{{- ssh_config_option('AuthorizedKeysCommand') }}
+#AuthorizedKeysCommandUser nobody
+{{- ssh_config_option('AuthorizedKeysCommandUser') }}
+
+#RevokedKeys none
+{{- ssh_config_option('RevokedKeys') }}
+
+
+# CASignatureAlgorithms
+{{- ssh_config_option('CASignatureAlgorithms') }}
+# TrustedUserCAKeys
+{{- ssh_config_option('TrustedUserCAKeys') }}
+
+# AuthorizedPrincipalsCommand none
+{{- ssh_config_option('AuthorizedPrincipalsCommand') }}
+# AuthorizedPrincipalsCommandUser
+{{- ssh_config_option('AuthorizedPrincipalsCommandUser') }}
+# AuthorizedPrincipalsFile
+{{- ssh_config_option('AuthorizedPrincipalsFile') }}
+
+# For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
+#HostbasedAuthentication no
+{{- ssh_config_option('HostbasedAuthentication') }}
+# Change to yes if you don't trust ~/.ssh/known_hosts for
+# HostbasedAuthentication
+#HostbasedAcceptedKeyTypes
+{{- ssh_config_option('HostbasedAcceptedKeyTypes') }}
+{{- ssh_config_option('HostbasedUsesNameFromPacketOnly') }}
+#IgnoreUserKnownHosts no
+{{- ssh_config_option('IgnoreUserKnownHosts') }}
+# Don't read the user's ~/.rhosts and ~/.shosts files
+#IgnoreRhosts yes
+{{- ssh_config_option('IgnoreRhosts') }}
+
+# To disable tunneled clear text passwords, change to no here!
+#PasswordAuthentication yes
+{{- ssh_config_option('PasswordAuthentication') }}
+#PermitEmptyPasswords no
+{{- ssh_config_option('PermitEmptyPasswords') }}
+
+# Change to no to disable s/key passwords
+#ChallengeResponseAuthentication yes
+{{- ssh_config_option('ChallengeResponseAuthentication') }}
+#KbdInteractiveAuthentication The default is to use whatever value ChallengeResponseAuthentication is set to (by default yes).
+{{- ssh_config_option('KbdInteractiveAuthentication') }}
+
+
+# Kerberos options
+#KerberosAuthentication no
+{{- ssh_config_option('KerberosAuthentication') }}
+#KerberosOrLocalPasswd yes
+{{- ssh_config_option('KerberosOrLocalPasswd') }}
+#KerberosTicketCleanup yes
+{{- ssh_config_option('KerberosTicketCleanup') }}
+#KerberosGetAFSToken no
+{{- ssh_config_option('KerberosGetAFSToken') }}
+
+# GSSAPI options
+#GSSAPIAuthentication no
+{{- ssh_config_option('GSSAPIAuthentication') }}
+#GSSAPICleanupCredentials yes
+{{- ssh_config_option('GSSAPICleanupCredentials') }}
+#GSSAPIStrictAcceptorCheck yes
+{{- ssh_config_option('GSSAPIStrictAcceptorCheck') }}
+#GSSAPIKeyExchange no
+{{- ssh_config_option('GSSAPIKeyExchange') }}
+#GSSAPIStoreCredentialsOnRekey no
+{{- ssh_config_option('GSSAPIStoreCredentialsOnRekey') }}
+
+# AuthenticationMethods
+{{- ssh_config_option('AuthenticationMethods') }}
+
+# Set this to 'yes' to enable PAM authentication, account processing,
+# and session processing. If this is enabled, PAM authentication will
+# be allowed through the ChallengeResponseAuthentication and
+# PasswordAuthentication.  Depending on your PAM configuration,
+# PAM authentication via ChallengeResponseAuthentication may bypass
+# the setting of "PermitRootLogin without-password".
+# If you just want the PAM account and session checks to run without
+# PAM authentication, then enable this but set PasswordAuthentication
+# and ChallengeResponseAuthentication to 'no'.
+#UsePAM yes
+{{- ssh_config_option('UsePAM') }}
+#UsePAMCheckLocks no
+{{- ssh_config_option('UsePAMCheckLocks') }}
+
+{{- ssh_config_option('AllowGroups') }}
+{{- ssh_config_option('DenyGroups') }}
+{{- ssh_config_option('AllowUsers') }}
+{{- ssh_config_option('DenyUsers') }}
+{{- ssh_config_option('ExposeAuthInfo') }}
+
+#DisableForwarding no
+{{- ssh_config_option('DisableForwarding') }}
+#AllowAgentForwarding yes
+{{- ssh_config_option('AllowAgentForwarding') }}
+#AllowTcpForwarding yes
+{{- ssh_config_option('AllowTcpForwarding') }}
+{{- ssh_config_option('PermitOpen') }}
+{{- ssh_config_option('PermitListen') }}
+{{- ssh_config_option('RDomain') }}
+#AllowStreamLocalForwarding yes
+{{- ssh_config_option('AllowStreamLocalForwarding') }}
+{{- ssh_config_option('StreamLocalBindMask') }}
+{{- ssh_config_option('StreamLocalBindUnlink') }}
+#GatewayPorts no
+{{- ssh_config_option('GatewayPorts') }}
+#X11Forwarding yes
+{{- ssh_config_option('X11Forwarding') }}
+#X11DisplayOffset 10
+{{- ssh_config_option('X11DisplayOffset') }}
+#X11UseLocalhost yes
+{{- ssh_config_option('X11UseLocalhost') }}
+#XAuthLocation /usr/bin/xauth
+{{- ssh_config_option('XAuthLocation') }}
+#PermitTTY yes
+{{- ssh_config_option('PermitTTY') }}
+#PrintMotd yes
+{{- ssh_config_option('PrintMotd') }}
+#PrintLastLog yes
+{{- ssh_config_option('PrintLastLog') }}
+#TCPKeepAlive yes
+{{- ssh_config_option('TCPKeepAlive') }}
+# only found in sle12 config
+#UseLogin no
+{{- ssh_config_option('UseLogin') }}
+#UsePrivilegeSeparation sandbox
+{{- ssh_config_option('UsePrivilegeSeparation') }}
+#UseTCPWrappers yes
+{{- ssh_config_option('UseTCPWrappers') }}
+# /only found in sle12 config
+#PermitUserEnvironment no
+{{- ssh_config_option('PermitUserEnvironment') }}
+{{- ssh_config_option('PermitUserRC') }}
+#Compression delayed
+{{- ssh_config_option('Compression') }}
+#ClientAliveInterval 0
+{{- ssh_config_option('ClientAliveInterval') }}
+#ClientAliveCountMax 3
+{{- ssh_config_option('ClientAliveCountMax') }}
+#UseDNS no
+{{- ssh_config_option('UseDNS') }}
+#PidFile /run/sshd.pid
+{{- ssh_config_option('PidFile') }}
+#MaxStartups 10:30:100
+{{- ssh_config_option('MaxStartups') }}
+#PermitTunnel no
+{{- ssh_config_option('PermitTunnel') }}
+#ChrootDirectory none
+{{- ssh_config_option('ChrootDirectory') }}
+#VersionAddendum none
+{{- ssh_config_option('VersionAddendum') }}
+#IPQoS The default is lowdelay for interactive sessions and throughput for non-interactive sessions.
+{{- ssh_config_option('IPQoS') }}
+
+# no default banner path
+#Banner none
+{{- ssh_config_option('Banner') }}
+
+# override default of no subsystems
+#Subsystem       sftp    /usr/lib/ssh/sftp-server
+{{- ssh_config_option('Subsystem') }}
+
+# This enables accepting locale enviroment variables LC_* LANG, see sshd_config(5).
+#AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
+#AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
+#AcceptEnv LC_IDENTIFICATION LC_ALL
+{{- ssh_config_option('AcceptEnv') }}
+{{- ssh_config_option('SetEnv') }}
+
+# Example of overriding settings on a per-user basis
+#Match User anoncvs
+#       X11Forwarding no
+#       AllowTcpForwarding no
+#       PermitTTY no
+#       ForceCommand cvs server
+{{- ssh_config_match_options() }}

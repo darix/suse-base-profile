@@ -1,0 +1,36 @@
+{%- set check_basedir = '/usr/lib/nagios/plugins' %}
+{%- for check, check_data in pillar.monitoring.checks.items() %}
+  {%- set cmd = check %}
+  {%- set args = '' %}
+  {%- if check_data and 'check' in check_data %}
+    {%- set cmd = check_data['check'] %}
+  {%- endif %}
+  {%- if not(cmd is match('^/')) %}
+    {%- set cmd = check_basedir ~ '/' ~ cmd %}
+  {%- endif %}
+  {%- if check_data and 'args' in check_data %}
+    {%- set args = check_data['args'] %}
+  {%- endif %}
+  {%- if check == 'check_ntp' %}
+    {%- set args = args ~ ' -H ' ~ pillar.ntp.server[0] %}
+  {%- endif %}
+  {%- if check == 'check_partition' %}
+    {%- set cmd = check_basedir ~ '/check_disk' %}
+    {%- for partition, part_data in check_data.partitions.items() %}
+      {%- set check_label = check ~ '_' ~ partition %}
+      {%- set warn        = part_data.get('warn',     pillar.monitoring.defaults.checks.check_partition.warn) %}
+      {%- set critical    = part_data.get('critical', pillar.monitoring.defaults.checks.check_partition.critical) %}
+      {%- set mountpoint  = part_data.mountpoint %}
+      {%- set args        = '-u GB -w ' ~ warn ~ ' -c ' ~ critical ~ ' -p ' ~ mountpoint %}
+command[{{ check_label }}]={{ cmd }} {{ args }}
+    {%- endfor %}
+  {%- else %}
+command[{{ check }}]={{ cmd }} {{ args }}
+  {%- endif %}
+{%- endfor %}
+{%- for interface in salt.filter_interfaces.interface_names_with_global_addresses()|sort %}
+  {%- set check = 'check_' ~ interface %}
+  {%- set cmd = check_basedir ~ '/check_eth' %}
+  {%- set args = ' -i ' ~ interface ~ ' -w 3G -C 6G -b 10G' %}
+command[{{ check }}]={{ cmd }} {{ args }}
+{%- endfor %}

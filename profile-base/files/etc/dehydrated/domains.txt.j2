@@ -1,0 +1,14 @@
+{%- if 'dehydrated' in pillar and 'certs' in pillar.dehydrated %}
+{%- set cert_types = ['rsa', 'ecdsa' ] %}
+{%- if 'cert_types' in pillar.dehydrated %}
+{%- set cert_types = pillar.dehydrated.cert_types %}
+{%- endif %}
+{%- for certname, certdata in pillar.dehydrated.certs.items() %}
+{%- if 'cert_types' in certdata %}
+{%-     set cert_types = certdata.cert_types %}
+{%- endif %}
+{%- for certtype in cert_types %}
+{{ certdata['domains'] | join(' ') }} > {{ certname }}_{{ certtype }}
+{%- endfor %}
+{%- endfor %}
+{%- endif %}
