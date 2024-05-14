@@ -28,4 +28,3 @@ chrony_service:
       - cleanup_ntp
     - watch:
       - chrony_config
-

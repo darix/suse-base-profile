@@ -4,10 +4,6 @@
   {%- if grains['osrelease_info']|length > 1 %}
     {%- set product_release =          grains.osrelease_info[0] ~ "-SP" ~ grains.osrelease_info[1] %}
     {%- set repo_name       = "SLE_" ~ grains.osrelease_info[0] ~ "_SP" ~ grains.osrelease_info[1] %}
-    {%- if grains.osrelease is equalto("15.5") %}
-    {%- set previous_product_release =          grains.osrelease_info[0] ~ "-SP4" %}
-    {%- set previous_repo_name       = "SLE_" ~ grains.osrelease_info[0] ~ "_SP4" %}
-    {%- endif %}
   {%- else %}
     {%- set product_release =          grains.osrelease_info[0] %}
     {%- set repo_name       = "SLE_" ~ grains.osrelease_info[0] %}
