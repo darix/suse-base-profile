@@ -15,6 +15,10 @@
   {%- set baseurl = "http://download." ~ grains.domain %}
   {%- endif %}
 
+  {%- if "always_use_obs_instance" in pillar.zypp and pillar.zypp.always_use_obs_instance %}
+    {%- set baseurl = "{baseurl}/{obs_instance}".format(baseurl=baseurl, obs_instance=obs_instance) %}
+  {%- endif %}
+
   {%- set repositories = [] %}
 
 # TODO: This needs if grains.osfullname == "SLES" and then an opensuse case too
@@ -33,7 +37,7 @@
   pkgrepo.managed:
     - humanname:  {{ repo_id }}
     - name:       {{ repo_id }}
-    - baseurl:    {{ baseurl }}/{{ obs_instance }}/SUSE/{{ repo_type }}s/{{ product_name }}/{{ product_release }}/{{ grains.osarch }}/{{ repo_type | lower }}
+    - baseurl:    {{ baseurl }}/SUSE/{{ repo_type }}s/{{ product_name }}/{{ product_release }}/{{ grains.osarch }}/{{ repo_type | lower }}
     - gpgcheck: 1
     {%- if repo_type is equalto('Update') %}
     - refresh: True
@@ -57,7 +61,7 @@
   pkgrepo.managed:
     - humanname:  {{ repo_id }}_Debug
     - name:       {{ repo_id }}_Debug
-    - baseurl:    {{ baseurl }}/{{ obs_instance }}/SUSE/{{ repo_type }}s/{{ product_name }}/{{ product_release }}/{{ grains.osarch }}/{{ repo_type | lower }}_debug  # noqa: 204
+    - baseurl:    {{ baseurl }}/SUSE/{{ repo_type }}s/{{ product_name }}/{{ product_release }}/{{ grains.osarch }}/{{ repo_type | lower }}_debug  # noqa: 204
     - gpgcheck: 1
     {%- if repo_type is equalto('Update') %}
     - refresh: True
@@ -76,7 +80,7 @@
   pkgrepo.managed:
     - humanname:  {{ repo_id }}
     - name:       {{ repo_id }}
-    - baseurl:    {{ baseurl }}/{{ obs_instance }}/SUSE/Backports/SLE-{{ product_release }}_{{ grains.osarch }}/standard  # noqa: 204
+    - baseurl:    {{ baseurl }}/SUSE/Backports/SLE-{{ product_release }}_{{ grains.osarch }}/standard  # noqa: 204
     - gpgcheck: 1
 {%- endif %}
 
