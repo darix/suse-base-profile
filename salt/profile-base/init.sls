@@ -38,6 +38,5 @@ include:
   - .etckeeper
   - .nsswitch
   - .sssd
-  - .vim-data
   - .salt-config
   - .apache
