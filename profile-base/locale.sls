@@ -17,6 +17,7 @@
 locale_packages:
   pkg.installed:
     - names:
+      - systemd
       {%- if grains.osfullname == 'openSUSE Tumbleweed' and locale_language in ['en_US.UTF-8', 'C.UTF-8'] %}
       - glibc-locale-base
       {%- else %}
@@ -29,6 +30,8 @@ locale_conf:
     - user: root
     - group: root
     - mode: '0644'
+    - require:
+      - locale_packages
     - contents:
       {% if "greeting" in pillar %}
       - '# {{ pillar.greeting }}'
