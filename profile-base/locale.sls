@@ -10,6 +10,7 @@
 
 {%- if "locale" in pillar and "formats" in pillar.locale %}
 {% for format, value in pillar.locale.formats.items() %}
+# TODO: add support that if the variable is already prefixed with LC_ we wouldnt do that again.
 {%- do content.append("LC_" ~ format|upper ~ "=" ~ value) %}
 {%- endfor %}
 {%- endif %}
