@@ -4,6 +4,8 @@ ca-certificates:
       - ca-certificates-buildops: ">=1.3"
       - ca-certificates-suse
     - fromrepo: SUSE_CA
+    - require:
+      - SUSE_CA
 
 remove_old_company_cas:
   pkg.purged:
