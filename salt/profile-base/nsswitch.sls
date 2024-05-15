@@ -27,32 +27,60 @@
 {%- do autofs_modules.append("nis") %}
 {%- endif %}
 
+{%- if grains.osfullname == "openSUSE Tumbleweed" %}
+nsswitch_copy_to_etc:
+  file.copy:
+    - name:   /etc/nsswitch.conf
+    - source: /usr/etc/nsswitch.conf
+    - preserve: True
+{%- endif %}
+
 nsswitch_passwd:
   file.replace:
     - name: /etc/nsswitch.conf
     - pattern: '^(passwd:\s+).*?$'
     - repl: '\1{{ passwd_modules| join(" ") }}'
+{%- if grains.osfullname == "openSUSE Tumbleweed" %}
+    - require:
+      - nsswitch_copy_to_etc
+{%- endif %}
 
 nsswitch_group:
   file.replace:
     - name: /etc/nsswitch.conf
     - pattern: '^(group:\s+).*?$'
     - repl: '\1{{ group_modules| join(" ") }}'
+{%- if grains.osfullname == "openSUSE Tumbleweed" %}
+    - require:
+      - nsswitch_copy_to_etc
+{%- endif %}
 
 nsswitch_shadow:
   file.replace:
     - name: /etc/nsswitch.conf
     - pattern: '^(shadow:\s+)\.*?$'
     - repl: '\1{{ shadow_modules| join(" ") }}'
+{%- if grains.osfullname == "openSUSE Tumbleweed" %}
+    - require:
+      - nsswitch_copy_to_etc
+{%- endif %}
 
 nsswitch_netgroup:
   file.replace:
     - name: /etc/nsswitch.conf
     - pattern: '^(netgroup:\s+).*?$'
     - repl: '\1{{ netgroup_modules| join(" ") }}'
+{%- if grains.osfullname == "openSUSE Tumbleweed" %}
+    - require:
+      - nsswitch_copy_to_etc
+{%- endif %}
 
 nsswitch_automount:
   file.replace:
     - name: /etc/nsswitch.conf
     - pattern: '^(automount:\s+).*?$'
     - repl: '\1{{ autofs_modules| join(" ") }}'
+{%- if grains.osfullname == "openSUSE Tumbleweed" %}
+    - require:
+      - nsswitch_copy_to_etc
+{%- endif %}
