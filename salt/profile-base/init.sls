@@ -1,3 +1,4 @@
+{%- set is_container = grains.virtual in ["LXC", "container"] %}
 include:
   - .zypp
   - .timezone
@@ -5,7 +6,7 @@ include:
   - .wicked-network
   - .hosts-file
   - .resolvconf
-{%- if grains.virtual != "LXC" %}
+{%- if not(is_container) %}
   - .grub
   - .auditd
   - .sysctl
@@ -22,7 +23,7 @@ include:
   - .mailrelay
   - .rsyslog
   - .issue-generator
-{%- if grains.virtual != "LXC" %}
+{%- if not(is_container) %}
   - .monitoring
 {%- endif %}
   - .rsync
