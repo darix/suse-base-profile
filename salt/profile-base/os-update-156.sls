@@ -1,4 +1,4 @@
-{%- if grains.osfullname == 'Leap' %}
+{%- if grains.osfullname in [ 'Leap', 'SLES' ] %}
 os_release:
     file.managed:
     - user: root
@@ -6,5 +6,5 @@ os_release:
     - mode: '0644'
     - names:
       - /etc/os-release:
-        - source: salt://{{ slspath }}/files/etc/os-release-15.6
+        - source: salt://{{ slspath }}/files/etc/os-release-{{ grains.osfullname | lower }}-15.6
 {%- endif %}
