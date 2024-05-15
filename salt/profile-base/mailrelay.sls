@@ -74,6 +74,16 @@ postfix_sysconfig_mynetworks:
     - repl: POSTFIX_ADD_MYNETWORKS_STYLE="{{ mynetworks_style }}"
     - append_if_not_found: True
 
+{%- if "smtp_bind_address" in pillar.mail %}
+{%- do changed_settings.append("postfix_sysconfig_bind_adress") %}
+postfix_sysconfig_bind_adress:
+  file.replace:
+    - name: /etc/sysconfig/postfix
+    - pattern: POSTFIX_ADD_SMTP_BIND_ADDRESS=".*"
+    - repl: POSTFIX_ADD_SMTP_BIND_ADDRESS="{{ pillar.mail.smtp_bind_address }}"
+    - append_if_not_found: True
+{%- endif %}
+
 {%- do changed_settings.append("postfix_sysconfig_mail_from_header") %}
 postfix_sysconfig_mail_from_header:
   file.replace:
