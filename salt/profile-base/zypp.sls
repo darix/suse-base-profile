@@ -4,3 +4,4 @@ include:
   - .zypp.sles
   - .zypp.isv-repositories
   - .zypp.check_zypper
+  - .zypp.locks
