@@ -25,6 +25,32 @@
       {%- set args        = '-u GB -w ' ~ warn ~ ' -c ' ~ critical ~ ' -p ' ~ mountpoint %}
 command[{{ check_label }}]={{ cmd }} {{ args }}
     {%- endfor %}
+  {%- elif check == 'check_iostat' %}
+    {%- set cmd = check_basedir ~ '/check_iostat' %}
+    {%- for device_name, device_data in check_data.partitions.items() %}
+
+      {%- set cmdline_options = [] %}
+      {%- set check_iostat_label = check ~ '_' ~ device_name %}
+
+      {%- if 'rw' in device_data and 'warning' in device_data['rw'] and 'critical' in device_data['rw'] %}
+      {%- do cmdline_options.append("-w " ~ device_data['rw']['warning'] %}
+      {%- do cmdline_options.append("-c " ~ device_data['rw']['critical'] %}
+      {%- endif %}
+
+      {%- if 'iowait' in device_data and 'warning' in device_data['iowait'] and 'critical' in device_data['iowait'] %}
+      {%- do cmdline_options.append("-W " ~ device_data['iowait']['warning'] %}
+      {%- do cmdline_options.append("-C " ~ device_data['iowait']['critical'] %}
+      {%- endif %}
+
+      {%- if 'utilization' in device_data and 'warning' in device_data['utilization'] and 'critical' in device_data['utilization'] %}
+      {%- do cmdline_options.append("-X " ~ device_data['utilization']['warning'] %}
+      {%- do cmdline_options.append("-Y " ~ device_data['utilization']['critical'] %}
+      {%- endif %}
+
+      {%- set device      = device_data.device %}
+      {%- set args        = {{ cmdline_options | join(' ') }}
+command[{{ check_iostat_label }}]={{ cmd }} {{ args }}
+    {%- endfor %}
   {%- else %}
 command[{{ check }}]={{ cmd }} {{ args }}
   {%- endif %}
