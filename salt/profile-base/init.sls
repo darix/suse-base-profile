@@ -12,6 +12,7 @@ include:
   - .sysctl
   - .chrony
   - .udev-rules
+  - .mounts
 {%- endif %}
   - .systemd-coredump
   - .systemd-settings
