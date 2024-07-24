@@ -149,6 +149,22 @@ class WickedActiveInterface(WickedBaseInterface):
                     "{key}='{value}'".format(key=key.upper(), value=value)
                 )
 
+        if 'bonding_master' in interface_data and interface_data['bonding_master']:
+            mac_address = self.mac_address_of_primary_interface_from_bond(interface_name)
+            log.debug("Found mac address from parent {interface_name}: {mac_address}".format(interface_name=interface_name, mac_address=mac_address))
+            self.ifcfg_data_list.append("LLADDR='{mac_address}'".format(mac_address=mac_address))
+
+        if 'bridge' in interface_data and interface_data['bridge']:
+            mac_address = self.mac_address_of_primary_interface_from_bridge(interface_name)
+            log.debug("Found mac address from parent {interface_name}: {mac_address}".format(interface_name=interface_name, mac_address=mac_address))
+            self.ifcfg_data_list.append("LLADDR='{mac_address}'".format(mac_address=mac_address))
+
+        if 'interfaces_shared_settings' in __pillar__['network']:
+           for key, value in __pillar__['network']['interfaces_shared_settings'].items():
+                self.ifcfg_data_list.append(
+                    "{key}='{value}'".format(key=key.upper(), value=value)
+                )
+
         if self.needs_rule_based_routing:
             self.add_local_default_routes(local_ips)
 
@@ -189,7 +205,7 @@ class WickedActiveInterface(WickedBaseInterface):
                     ]
                 }
 
-            if len(self.ifroute_data_list) > 0:
+            if len(self.ifroute_data_list) > 0 and ip_counter > 0:
 
                 self.reload_deps.append(self.ifroute_section)
 
@@ -224,6 +240,23 @@ class WickedActiveInterface(WickedBaseInterface):
 
     def table_from_interface(self):
         return re.sub("_", "-", self.interface_name)
+
+    def mac_address_of_primary_interface_from_bridge(self, bridge_name):
+        bridge_port_interface = __pillar__["network"]["interfaces"][bridge_name]['bridge_ports']
+
+        if 'etherdevice' in __pillar__["network"]["interfaces"][bridge_port_interface]:
+           parent_interface = __pillar__["network"]["interfaces"][bridge_port_interface]['etherdevice']
+           return self.mac_address_of_primary_interface_from_bond(parent_interface)
+
+        if 'bonding_master' in __pillar__["network"]["interfaces"][bridge_port_interface] and __pillar__["network"]["interfaces"][bridge_port_interface]['bonding_master']:
+           return self.mac_address_of_primary_interface_from_bond(bridge_port_interface)
+
+        return __pillar__["udev"]["net"][bridge_port_interface]
+
+    def mac_address_of_primary_interface_from_bond(self, bond_name):
+        hw_interface = __pillar__["network"]["interfaces"][bond_name]['bonding_slave0']
+        mac_address = __pillar__["udev"]["net"][hw_interface]
+        return mac_address
 
 
     def add_local_default_routes(self, local_ips):
