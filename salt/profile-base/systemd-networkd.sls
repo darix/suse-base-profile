@@ -1,4 +1,4 @@
-{%- from 'helpers/networkd_helpers.sls' import networkd_config  %}
+{%- from 'profile-base/helpers/networkd_helpers.sls' import networkd_config  %}
 
 # other types of systemd-network files need:
 #  1. define file naming index
