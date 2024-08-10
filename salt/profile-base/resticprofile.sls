@@ -17,7 +17,7 @@ def has_schedule(section_data):
 
 def requires_for_key_section_for_profile(section_name, section_data):
   if 'password-file' in section_data:
-    return 'resticprofile_generate_key_{section_name}'
+    return f'resticprofile_generate_key_{section_name}'
   elif 'inherit' in section_data:
     return requires_for_key_section_for_profile(section_data['inherit'], __pillar__['resticprofile']['config'][section_data['inherit']])
   else:
@@ -64,7 +64,7 @@ def run():
       }
 
       for section_name, section_data in __pillar__['resticprofile']['config'].items():
-        cmdrun_genkey          = f'resticprofile_generate_key_{section_name}'
+        cmdrun_genkey          = requires_for_key_section_for_profile(section_name, section_data)
         cmdrun_init_repository = f'resticprofile_init_repository_{section_name}'
         cmdrun_initial_backup  = f'resticprofile_initial_backup_{section_name}'
         cmdrun_schedule        = f'resticprofile_schedule_{section_name}'
@@ -90,7 +90,7 @@ def run():
           if repository.startswith('local:'):
             repository = repository[6:]
 
-          requires = [requires_for_key_section_for_profile(section_name, section_data)]
+          requires = [cmdrun_genkey]
 
           config[cmdrun_init_repository] = {
             'cmd.run': [
