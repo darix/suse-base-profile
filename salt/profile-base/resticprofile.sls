@@ -35,14 +35,15 @@ def run():
       }
 
       for section_name, section_data in __pillar__['resticprofile']['config'].items():
+        cmdrun_genkey = 'resticprofile_generate_key_{section_name}'
+
         if 'password-file' in section_data:
-          cmdrun_section = 'resticprofile_generate_key_' + section_name
           password_file = section_data['password-file']
           requires = ['resticprofile_config']
 
-          config[cmdrun_section] = {
+          config[cmdrun_genkey] = {
             'cmd.run': [
-              {'name': 'resticprofile generate --random-key 4096 > ' + password_file},
+              {'name': f'resticprofile generate --random-key 4096 > {password_file}'},
               {'creates': password_file},
               {'runas': 'root'},
               {'umask': '077'},
