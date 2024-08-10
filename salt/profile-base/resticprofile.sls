@@ -29,18 +29,13 @@ def run():
   config_filename = '/etc/resticprofile/profiles.yaml'
 
   if 'resticprofile' in __pillar__:
-    pkgs = ['resticprofile', 'rclone']
 
-    scheduled_profiles = []
-    initial_backup_profiles = []
+    scheduled_profiles      = __pillar__['resticprofile'].get('scheduled_profiles', [])
+    initial_backup_profiles = __pillar__['resticprofile'].get('initial_backup_profiles', [])
+
     key_size = __pillar__['resticprofile'].get('key_size', 4096)
 
-    if 'scheduled_profiles' in __pillar__['resticprofile']:
-      scheduled_profiles = __pillar__['resticprofile']['scheduled_profiles']
-
-    if 'initial_backup_profiles' in __pillar__['resticprofile']:
-      initial_backup_profiles = __pillar__['resticprofile']['initial_backup_profiles']
-
+    pkgs = ['resticprofile', 'rclone']
     if 'SUSE' == __grains__['os']:
       pkgs.append('resticprofile-helpers')
 
