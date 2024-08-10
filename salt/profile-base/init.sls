@@ -32,7 +32,6 @@ include:
   - .logrotate
   - .ssh
   - .ssh-root-authorized-keys
-  - .internal-ca-certificates
   - .ethtool
   - .ipsets
   - .dehydrated
