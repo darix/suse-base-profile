@@ -32,10 +32,14 @@ def run():
     pkgs = ['resticprofile', 'rclone']
 
     scheduled_profiles = []
+    initial_backup_profiles = []
     key_size = __pillar__['resticprofile'].get('key_size', 4096)
 
     if 'scheduled_profiles' in __pillar__['resticprofile']:
       scheduled_profiles = __pillar__['resticprofile']['scheduled_profiles']
+
+    if 'initial_backup_profiles' in __pillar__['resticprofile']:
+      initial_backup_profiles = __pillar__['resticprofile']['initial_backup_profiles']
 
     if 'SUSE' == __grains__['os']:
       pkgs.append('resticprofile-helpers')
@@ -135,4 +139,20 @@ def run():
               {'onchanges': ['resticprofile_config']}
             ]
           }
+        # TODO: does not work as expected - it always runs the backup
+        # if section_name in initial_backup_profiles:
+        #   requires = [cmdrun_genkey]
+
+        #   if is_local_repository(section_data):
+        #     requires = [cmdrun_init_repository]
+
+        #   config[cmdrun_initial_backup] = {
+        #     'cmd.run': [
+        #       {'name': f'resticprofile {section_name}.backup'},
+        #       {'runas': 'root'},
+        #       {'umask': '077'},
+        #       {'require': requires },
+        #     ]
+        #   }
+
   return config
