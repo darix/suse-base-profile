@@ -1,6 +1,5 @@
 #!py
 
-from salt.utils.yamldumper import safe_dump
 import os.path
 
 def is_local_repository(section_data):
