@@ -1,5 +1,18 @@
 #!py
+
 from salt.utils.yamldumper import safe_dump
+import os.path
+
+def is_local_repository(section_data):
+  return 'repository' in section_data and (section_data['repository'].startswith('/') or section_data['repository'].startswith('local:/'))
+
+def has_schedule(section_data):
+  if 'backup' in section_data and 'schedule' in section_data['backup']:
+    return True
+  elif 'inherit' in section_data:
+    return has_schedule(__pillar__['resticprofile']['config'][section_data['inherit']])
+  else:
+    return False
 
 def run():
   config={}
@@ -8,6 +21,11 @@ def run():
 
   if 'resticprofile' in __pillar__:
     pkgs = ['resticprofile', 'rclone']
+
+    scheduled_profiles = []
+
+    if 'scheduled_profiles' in __pillar__['resticprofile']:
+      scheduled_profiles = __pillar__['resticprofile']['scheduled_profiles']
 
     if 'SUSE' == __grains__['os']:
       pkgs.append('resticprofile-helpers')
@@ -38,6 +56,10 @@ def run():
 
       for section_name, section_data in __pillar__['resticprofile']['config'].items():
         cmdrun_genkey = 'resticprofile_generate_key_{section_name}'
+        cmdrun_init_repository = f'resticprofile_init_repository_{section_name}'
+        cmdrun_initial_backup = f'resticprofile_initial_backup_{section_name}'
+        cmdrun_schedule = f'resticprofile_schedule_{section_name}'
+        cmdrun_unschedule = f'resticprofile_unschedule_{section_name}'
 
         if 'password-file' in section_data:
           password_file = section_data['password-file']
@@ -53,9 +75,8 @@ def run():
             ]
           }
 
-        if 'repository' in section_data and (section_data['repository'].startswith('/') or section_data['repository'].startswith('local:/')):
+        if is_local_repository(section_data):
 
-          cmdrun_init_repository = f'resticprofile_init_repository_{section_name}'
           repository = section_data['repository']
           if repository.startswith('local:'):
             repository = repository[6:]
@@ -64,7 +85,7 @@ def run():
 
           config[cmdrun_init_repository] = {
             'cmd.run': [
-              {'name': f'resticprofile --config={config_filename} {section_name}.init'},
+              {'name': f'resticprofile {section_name}.init'},
               {'creates': f'{repository}/config' },
               {'runas': 'root'},
               {'umask': '077'},
@@ -72,5 +93,36 @@ def run():
             ]
           }
 
+        if section_name in scheduled_profiles and has_schedule(section_data):
+          requires = [cmdrun_genkey]
 
+          created_units = [
+            f'/etc/systemd/system/resticprofile-backup@profile-{section_name}.timer',
+            f'/etc/systemd/system/resticprofile-backup@profile-{section_name}.service',
+          ]
+
+          if is_local_repository(section_data):
+            requires = [cmdrun_init_repository]
+
+          if os.path.exists(created_units[0]) or os.path.exists(created_units[1]):
+            config[cmdrun_unschedule] = {
+              'cmd.run': [
+                {'name': f'resticprofile {section_name}.unschedule'},
+                {'runas': 'root'},
+                {'umask': '077'},
+                {'require': requires },
+                {'onchanges': ['resticprofile_config']}
+              ]
+          }
+
+          config[cmdrun_schedule] = {
+            'cmd.run': [
+              {'name': f'resticprofile {section_name}.schedule'},
+              {'creates': created_units},
+              {'runas': 'root'},
+              {'umask': '077'},
+              {'require': requires },
+              {'onchanges': ['resticprofile_config']}
+            ]
+          }
   return config
