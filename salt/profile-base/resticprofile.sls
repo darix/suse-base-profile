@@ -1,10 +1,12 @@
 #!py
 
 import os.path
+from salt.exceptions import SaltConfigurationError
 
 def is_local_repository(section_data):
   return 'repository' in section_data and (section_data['repository'].startswith('/') or section_data['repository'].startswith('local:/'))
 
+# TODO: this should have a check if we have all parameters to actually schedule the job
 def has_schedule(section_data):
   if 'backup' in section_data and 'schedule' in section_data['backup']:
     return True
@@ -12,6 +14,14 @@ def has_schedule(section_data):
     return has_schedule(__pillar__['resticprofile']['config'][section_data['inherit']])
   else:
     return False
+
+def requires_for_key_section_for_profile(section_name, section_data):
+  if 'password-file' in section_data:
+    return 'resticprofile_generate_key_{section_name}'
+  elif 'inherit' in section_data:
+    return requires_for_key_section_for_profile(section_data['inherit'], __pillar__['resticprofile']['config'][section_data['inherit']])
+  else:
+    raise SaltConfigurationError(f'Can not find password-file for section "{section_name}"')
 
 def run():
   config={}
@@ -81,7 +91,7 @@ def run():
           if repository.startswith('local:'):
             repository = repository[6:]
 
-          requires = [cmdrun_genkey]
+          requires = [requires_for_key_section_for_profile(section_name, section_data)]
 
           config[cmdrun_init_repository] = {
             'cmd.run': [
