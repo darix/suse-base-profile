@@ -1,9 +1,9 @@
 # generic mount point handler
-{%- if 'mounts' in pillar and pillar.mounts %}
-
 {%- from 'profile-base/helpers/mounts_helper.sls' import cleanup_mount_name %}
 {%- from 'profile-base/helpers/mounts_helper.sls' import mount_option_value %}
 {%- from 'profile-base/helpers/mounts_helper.sls' import mount_options %}
+
+{%- if 'mounts' in pillar and pillar.mounts %}
 
   {%- for mount_name, mount_data in pillar.mounts.items() %}
 
