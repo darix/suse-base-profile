@@ -23,6 +23,7 @@ def run():
     pkgs = ['resticprofile', 'rclone']
 
     scheduled_profiles = []
+    key_size = __pillar__['resticprofile'].get('key_size', 4096)
 
     if 'scheduled_profiles' in __pillar__['resticprofile']:
       scheduled_profiles = __pillar__['resticprofile']['scheduled_profiles']
@@ -67,7 +68,7 @@ def run():
 
           config[cmdrun_genkey] = {
             'cmd.run': [
-              {'name': f'resticprofile generate --random-key 4096 > {password_file}'},
+              {'name': f'resticprofile generate --random-key {key_size} > {password_file}'},
               {'creates': password_file},
               {'runas': 'root'},
               {'umask': '077'},
