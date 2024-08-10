@@ -42,3 +42,4 @@ include:
   - .sssd
   - .salt-config
   - .apache
+  - .resticprofile
