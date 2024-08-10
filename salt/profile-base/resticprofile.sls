@@ -4,7 +4,7 @@ from salt.utils.yamldumper import safe_dump
 def run():
   config={}
 
-  config_filename = '/etc/resticprofile/profile.yaml'
+  config_filename = '/etc/resticprofile/profiles.yaml'
 
   if 'resticprofile' in __pillar__:
     pkgs = ['resticprofile', 'rclone']
