@@ -24,13 +24,15 @@ def run():
     if 'config' in __pillar__['resticprofile']:
       requires = ['resticprofile_packages']
       config['resticprofile_config'] = {
-        'file.managed': [
+        'file.serialize': [
           {'name': config_filename},
           {'user': 'root'},
           {'group': 'root'},
           {'mode': '0600'},
           {'require': requires },
-          {'contents': safe_dump(__pillar__['resticprofile']['config'])},
+          {'dataset': __pillar__['resticprofile']['config']},
+          {'serializer': 'yaml'},
+          {'serializer_opts': {'indent': 2}}
         ]
       }
 
