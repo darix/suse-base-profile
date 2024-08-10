@@ -64,7 +64,7 @@ def run():
       }
 
       for section_name, section_data in __pillar__['resticprofile']['config'].items():
-        cmdrun_genkey          = 'resticprofile_generate_key_{section_name}'
+        cmdrun_genkey          = f'resticprofile_generate_key_{section_name}'
         cmdrun_init_repository = f'resticprofile_init_repository_{section_name}'
         cmdrun_initial_backup  = f'resticprofile_initial_backup_{section_name}'
         cmdrun_schedule        = f'resticprofile_schedule_{section_name}'
