@@ -43,3 +43,4 @@ include:
   - .salt-config
   - .apache
   - .resticprofile
+  - .flatpak
