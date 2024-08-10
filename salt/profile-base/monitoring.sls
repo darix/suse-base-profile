@@ -1,3 +1,4 @@
+{%- if "monitoring" in pillar %}
 monitoring_packages:
   pkg.installed:
     - pkgs:
@@ -80,3 +81,4 @@ nrpe_service:
     - watch:
       - nrpe_config
       - nrpe_d_config
+{%- endif %}
