@@ -22,7 +22,7 @@ flatpak-{{ repository_name }}:
     {%- endfor %}
   {%- endif %}
 
-  {%- if "apps" in pillar.flatpak and registered_repositories|len > 0 %}
+  {%- if "apps" in pillar.flatpak and registered_repositories|length > 0 %}
     {%- for app_name in pillar.flatpak %}
 
 flatpak-app-{{ app_name }}:
