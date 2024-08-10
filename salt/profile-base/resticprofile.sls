@@ -51,4 +51,24 @@ def run():
             ]
           }
 
+        if 'repository' in section_data and (section_data['repository'].startswith('/') or section_data['repository'].startswith('local:/')):
+
+          cmdrun_init_repository = f'resticprofile_init_repository_{section_name}'
+          repository = section_data['repository']
+          if repository.startswith('local:'):
+            repository = repository[6:]
+
+          requires = [cmdrun_genkey]
+
+          config[cmdrun_init_repository] = {
+            'cmd.run': [
+              {'name': f'resticprofile --config={config_filename} {section_name}.init'},
+              {'creates': f'{repository}/config' },
+              {'runas': 'root'},
+              {'umask': '077'},
+              {'require': requires },
+            ]
+          }
+
+
   return config
