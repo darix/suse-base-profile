@@ -16,7 +16,7 @@
 
   {%- set only_has_updates   = [] %}
 
-  {%- if 'enable_non_oss' in pillar.zypp %}
+  {%- if 'enable_non_oss' in pillar.zypp and pillar.zypp.enable_non_oss %}
       {%- do repositories_list.append('non-oss') %}
   {%- endif %}
 
@@ -35,8 +35,11 @@
 
 {%- for repo in repositories_list %}
 
-    {%- set repo_id   = "repo-" ~ repo %}
+    {%- set repo_id              = "repo-" ~ repo %}
 
+    {%- set debug_repo_id        = repo_id ~ '-debug' %}
+    {%- set debug_update_repo_id = repo_id ~ '-update-debug' %}
+    {%- set source_repo_id       = repo_id ~ '-source' %}
 
 {%- if not(repo in only_has_updates) %}
     {%- do repositories.append(repo_id) %}
@@ -62,10 +65,13 @@
     - gpgcheck: True
     - refresh:    True
 
+{%- if repo in ["oss", "non-oss"] %}
 
-{%- if 'enable_debug' in pillar.zypp and pillar.zypp.enable_debug %}
-  {%- set debug_repo_id = repo_id ~ '-debug' %}
-  {%- do repositories.append(debug_repo_id) %}
+  {%- if 'enable_debug' in pillar.zypp and pillar.zypp.enable_debug %}
+
+    {%- do repositories.append(debug_repo_id) %}
+    {%- do repositories.append(debug_update_repo_id) %}
+
 {{ debug_repo_id }}:
   pkgrepo.managed:
     - humanname:  {{ debug_repo_id }}
@@ -75,22 +81,30 @@
     - gpgcheck: True
     - refresh:    {{ update_for_baserepo }}
 
-  {%- set debug_repo_id = repo_id ~ '-update-debug' %}
-  {%- do repositories.append(debug_repo_id) %}
-{{ debug_repo_id }}:
+{{ debug_update_repo_id }}:
   pkgrepo.managed:
-    - humanname:  {{ debug_repo_id }}
-    - name:       {{ debug_repo_id }}
+    - humanname:  {{ debug_update_repo_id }}
+    - name:       {{ debug_update_repo_id }}
     - baseurl:    {{ baseurl }}/update/{{ update_basedir }}/{{ repo }}_debug/
     - enabled: True
     - gpgcheck: True
     - refresh:    True
-{%- endif %}
 
-{%- if 'enable_source' in pillar.zypp and pillar.zypp.enable_source %}
+  {%- else %}
 
-  {%- set source_repo_id = repo_id ~ '-source' %}
-  {%- do repositories.append(source_repo_id) %}
+{{ debug_repo_id }}:
+  pkgrepo.absent:
+    - name:       {{ debug_repo_id }}
+
+{{ debug_update_repo_id }}:
+  pkgrepo.absent:
+    - name:       {{ debug_update_repo_id }}
+
+  {%- endif %}
+
+  {%- if 'enable_source' in pillar.zypp and pillar.zypp.enable_source %}
+
+    {%- do repositories.append(source_repo_id) %}
 
 {{ source_repo_id }}:
   pkgrepo.managed:
@@ -100,6 +114,14 @@
     - enabled: True
     - gpgcheck: True
     - refresh:    {{ update_for_baserepo }}
+
+  {%- else %}
+
+{{ source_repo_id }}:
+  pkgrepo.absent:
+    - name:       {{ source_repo_id }}
+
+  {%- endif %}
 {%- endif %}
 
 {%- endfor %}
@@ -111,6 +133,5 @@ opensuse_zypper_refresh:
 {%- for repo_id in repositories %}
       - {{ repo_id }}
 {%- endfor %}
-
 
 {%- endif %}
