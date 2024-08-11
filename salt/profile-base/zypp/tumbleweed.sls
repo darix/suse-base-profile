@@ -16,7 +16,7 @@
 
   {%- set only_has_updates   = [] %}
 
-  {%- if 'enable_non_oss' in pillar.zypp %}
+  {%- if 'enable_non_oss' in pillar.zypp and pillar.zypp.enable_non_oss %}
       {%- do repositories_list.append('non-oss') %}
   {%- endif %}
 
