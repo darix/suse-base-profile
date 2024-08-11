@@ -1,7 +1,7 @@
 {%- if 'zypp' in pillar and 'products_enable_openh264' in pillar.zypp and pillar.zypp.products_enable_openh264 %}
   {%- set baseurl = "https://codecs.opensuse.org/openh264/" %}
 
-  {%- set repoid = "repo-openh264" %}
+  {%- set repo_id = "repo-openh264" %}
   {%- set project_name = "Open H.264 Codec " %}
   {%- set subdir = None %}
 
@@ -16,11 +16,11 @@
   {%- endif %}
 
   {%- if subdir %}
-    {%- set repo_url = baseurl ~ '/' ~ subdir '/' %}
+    {%- set repo_url = baseurl ~ subdir ~ '/' %}
 {{ repo_id }}:
   pkgrepo.managed:
     - name:       {{ repo_id }}
-    - humanname:  {{ project_name }}{{ distro_field }}
+    - humanname:  {{ project_name }}({{ distro_field }})
     - baseurl:    {{ repo_url }}
     - gpgcheck: 1
     - refresh: True
