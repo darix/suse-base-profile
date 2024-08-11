@@ -5,3 +5,4 @@ include:
   - .zypp.isv-repositories
   - .zypp.check_zypper
   - .zypp.locks
+  - .zypp.openh264
