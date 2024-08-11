@@ -3,6 +3,7 @@ uninstall_syslog_ng_package:
     - names:
       - syslog-ng
 
+{%- if 'syslog' in pillar %}
 {%- set rsyslog_version_dep = '8.2306.0' %}
 rsyslog_package:
   pkg.installed:
@@ -13,7 +14,6 @@ rsyslog_package:
     - require:
       - uninstall_syslog_ng_package
 
-{%- if 'syslog' in pillar %}
 rsyslog_remote_host:
   file.managed:
     - user: root
