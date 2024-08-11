@@ -1,4 +1,4 @@
-{%- if grains.osfullname == 'Leap' or grains.oscodename == 'openSUSE Tumbleweed' %}
+{%- if grains.osfullname == 'Leap' %}
 
   {%- set obs_instance = 'obs' %}
 
@@ -20,23 +20,12 @@
       {%- do repositories_list.append('non-oss') %}
   {%- endif %}
 
-  {%- set product_release = grains.osrelease                              %}
-  {%- set repo_name       = grains.oscodename | regex_replace( ' ', '_' ) %}
-
-  {%- if grains.osfullname == 'Leap' %}
   {%- set distro_basedir = 'distribution/leap/' ~ grains.osrelease %}
   {%- set update_basedir = 'leap/' ~ grains.osrelease %}
 
   {%- set only_has_updates   = ['backports', 'sle'] %}
 
   {%- set update_for_baserepo = False %}
-  {%- endif %}
-
-  {%- if grains.oscodename == 'openSUSE Tumbleweed' %}
-  {%- set distro_basedir = 'tumbleweed' %}
-  {%- set distro_basedir = 'tumbleweed' %}
-  {%- set update_for_baserepo = True %}
-  {%- endif %}
 
   {%- for repo in only_has_updates %}
      {%- do repositories_list.append(repo) %}
@@ -62,7 +51,6 @@
     - refresh:    {{ update_for_baserepo }}
 {%- endif %}
 
-{%- if grains.oscodename != 'openSUSE Tumbleweed' %}
     {%- set update_repo_id = repo_id ~ '-update' %}
     {%- do repositories.append(update_repo_id) %}
 {{ update_repo_id }}:
@@ -73,39 +61,41 @@
     - enabled: True
     - gpgcheck: True
     - refresh:    True
-{%- endif %}
+
 
 {%- if 'enable_debug' in pillar.zypp and pillar.zypp.enable_debug %}
-
-{%- if (grains.oscodename == 'openSUSE Tumbleweed' and repo != 'non-oss') or grains.osfullname == 'Leap' %}
-{{ repo_id }}-debug:
+  {%- set debug_repo_id = repo_id ~ '-debug' %}
+  {%- do repositories.append(debug_repo_id) %}
+{{ debug_repo_id }}:
   pkgrepo.managed:
-    - humanname:  {{ repo_id }}-debug
-    - name:       {{ repo_id }}-debug
+    - humanname:  {{ debug_repo_id }}
+    - name:       {{ debug_repo_id }}
     - baseurl:    {{ baseurl }}/debug/{{ distro_basedir }}/repo/{{ repo }}
     - enabled: True
     - gpgcheck: True
     - refresh:    {{ update_for_baserepo }}
-{%- endif %}
 
-{%- if grains.oscodename != 'openSUSE Tumbleweed' %}
-{{ repo_id }}-update-debug:
+  {%- set debug_repo_id = repo_id ~ '-update-debug' %}
+  {%- do repositories.append(debug_repo_id) %}
+{{ debug_repo_id }}:
   pkgrepo.managed:
-    - humanname:  {{ repo_id }}-update-debug
-    - name:       {{ repo_id }}-update-debug
+    - humanname:  {{ debug_repo_id }}
+    - name:       {{ debug_repo_id }}
     - baseurl:    {{ baseurl }}/update/{{ update_basedir }}/{{ repo }}_debug/
     - enabled: True
     - gpgcheck: True
     - refresh:    True
 {%- endif %}
 
-{%- endif %}
+{%- if 'enable_source' in pillar.zypp and pillar.zypp.enable_source %}
 
-{%- if 'enable_source' in pillar.zypp and pillar.zypp.enable_debug %}
-{{ repo_id }}-source:
+  {%- set source_repo_id = repo_id ~ '-source' %}
+  {%- do repositories.append(source_repo_id) %}
+
+{{ source_repo_id }}:
   pkgrepo.managed:
-    - humanname:  {{ repo_id }}-source
-    - name:       {{ repo_id }}-source
+    - humanname:  {{ source_repo_id }}
+    - name:       {{ source_repo_id }}
     - baseurl:    {{ baseurl }}/source/{{ distro_basedir }}/repo/{{ repo }}
     - enabled: True
     - gpgcheck: True
