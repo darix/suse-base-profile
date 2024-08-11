@@ -55,8 +55,8 @@
     {%- do repositories.append(update_repo_id) %}
 {{ update_repo_id }}:
   pkgrepo.managed:
-    - humanname:  {{ repo_id }}-update
-    - name:       {{ repo_id }}-update
+    - humanname:  {{ update_repo_id }}
+    - name:       {{ update_repo_id }}
     - baseurl:    {{ baseurl }}/update/{{ update_basedir }}/{{ repo }}/
     - enabled: True
     - gpgcheck: True
