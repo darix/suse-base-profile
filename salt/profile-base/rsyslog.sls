@@ -25,13 +25,11 @@ rsyslog_remote_host:
     - names:
       - /etc/rsyslog.d/remote.conf:
         - source: salt://{{ slspath }}/files/etc/rsyslog.d/remote.conf.j2
-{%- endif %}
 
 rsyslog_service:
   service.running:
     - name: rsyslog
     - enable: True
-{%- if 'syslog' in pillar %}
     - require:
       - rsyslog_remote_host
     - watch:
