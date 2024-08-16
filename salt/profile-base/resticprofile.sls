@@ -118,7 +118,7 @@ def run():
               'cmd.run': [
                 {'name': f'resticprofile {section_name}.unschedule'},
                 {'runas': 'root'},
-                {'umask': '077'},
+                {'umask': '022'},
                 {'require': requires },
                 {'onchanges': ['resticprofile_config']}
               ]
@@ -129,7 +129,7 @@ def run():
               {'name': f'resticprofile {section_name}.schedule'},
               {'creates': created_units},
               {'runas': 'root'},
-              {'umask': '077'},
+              {'umask': '022'},
               {'require': requires },
               {'onchanges': ['resticprofile_config']}
             ]
