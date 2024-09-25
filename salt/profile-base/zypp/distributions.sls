@@ -13,8 +13,8 @@ class DistributionRepositories:
       self.obs_instance = obs_instance
       self.zypp_pillar = __pillar__['zypp']
 
-      if not('domain' in __grains__):
-         raise SaltConfigurationError('Domain grain not set')
+      if not('domain' in __grains__) and not('baseurl' in zypp_pillar):
+         raise SaltConfigurationError('Domain grain not set and neither is the baseurl configured')
 
       domain = __grains__.get("domain", None)
 
