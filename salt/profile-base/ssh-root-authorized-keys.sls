@@ -15,7 +15,7 @@ def run():
                 if homedir == target_dir:
                     raise SaltRenderError(f"Can not resolve the homedir for user {username} {target_dir}")
                 if not(os.path.isdir(homedir)):
-                    raise SaltRenderError(f"Invalid homedir: {target_dir}")
+                    raise SaltRenderError(f"Invalid homedir? Not a directory? {target_dir}")
 
                 target_dir = homedir
 
