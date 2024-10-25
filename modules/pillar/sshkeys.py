@@ -93,17 +93,19 @@ class SSHKeysResolver:
                     resolved_usernames.extend(self.resolve_groups(username, group))
             if "users" in userdata:
                 resolved_usernames.extend(userdata["users"])
-            logging.info(f"User list after resolving [{resolved_usernames}")
+            logging.info(f"User list after resolving {resolved_usernames}")
             self.resolve_users(username, resolved_usernames)
 
     def resolve_users(self, target_username, users):
+        user_list = {}
         for user in users:
             user_file = os.path.join(self.sshkeys_basedir, "users", f"{user}.sls")
             if os.path.exists(user_file):
                 user_data = self.render(user_file)
-                self.merge_user_results(target_username, user_data["sshkeys"]["users"])
+                user_list[user] = user_data["sshkeys"]["users"][user]
             else:
                 raise SaltRenderError(f"Failed to find user file for {user} {user_file}")
+        self.merge_user_results(target_username, user_list)
 
 
     def merge_user_results(self, target_username, input_data):
