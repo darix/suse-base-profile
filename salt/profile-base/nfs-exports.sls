@@ -23,13 +23,12 @@ def mountoptions(options_list=[]):
 def run():
     config = {}
     if "nfs_server" in __pillar__:
-        # config["nfs_server_packages"] = {
-        #     "pkg.installed": [
-        #         {"names": [ "nfs-kernel-server" ]},
-        #     ]
-        # }
-        # nfs_server_requires = ["nfs_server_packages"]
-        nfs_server_requires = []
+        config["nfs_server_packages"] = {
+            "pkg.installed": [
+                {"names": [ "nfs-kernel-server" ]},
+            ]
+        }
+        nfs_server_requires = ["nfs_server_packages"]
 
         i=0
         exports_list = []
