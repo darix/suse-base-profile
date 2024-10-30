@@ -27,6 +27,16 @@ sysconfig_{{ file | regex_replace('/', '_') }}_{{ setting }}:
       {%- endfor %}
       {%- endif %}
     {%- endif -%}
+    {%- if 'require_in' in file_data[key] %}
+    - require:
+      {%- if file_data[key]['require_in'] is string %}
+      - {{ file_data[key]['require_in'] }}
+      {%- else %}
+      {%- for requires in file_data[key]['require_in'] %}
+      - {{ requires }}
+      {%- endfor %}
+      {%- endif %}
+    {%- endif -%}
     {%- if 'cmd' in file_data[key] %}
   cmd.run:
     - name: {{ file_data[key]['cmd'] }}
