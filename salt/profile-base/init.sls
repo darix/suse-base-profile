@@ -43,3 +43,4 @@ include:
   - .apache
   - .resticprofile
   - .flatpak
+  - .nfs-exports
