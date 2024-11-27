@@ -9,6 +9,7 @@ monitoring_packages:
       - monitoring-plugins-cpu_stats
       - monitoring-plugins-disk
       - monitoring-plugins-eth
+      - monitoring-plugins-http
 {%- if grains.virtual == 'physical' %}
       - monitoring-plugins-ipmi-sensor1
 {%- endif %}
@@ -73,6 +74,24 @@ nrpe_sudo_rules:
     - names:
       - /etc/sudoers.d/99-salt-monitoring:
         - source: salt://{{ slspath }}/files/etc/sudoers.d/99-salt-monitoring.j2
+
+{%- if 'check_haproxy' in pillar.monitoring.checks and 'nagiosgroups' in pillar.monitoring %}
+fix_nagios_user_groups_for_haproxy:
+  user.present:
+    - name: nagios
+    - groups:
+  {%- for entry in pillar.monitoring.nagiosgroups | sort %}
+      - {{ entry }}
+  {%- endfor %}
+    - require:
+      - monitoring_packages
+      - haproxy.install
+    - require_in:
+      - nrpe_service
+    - onchanges_in:
+      - nrpe_service
+{%- endif %}
+
 
 nrpe_service:
   service.running:
