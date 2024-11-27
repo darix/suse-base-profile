@@ -35,8 +35,8 @@ locale_conf:
       - locale_packages
     - contents:
       {% if "greeting" in pillar %}
-      - '# {{ pillar.greeting }}'
+      - "# {{ pillar.greeting }}"
       {%- endif %}
       {%- for line in content %}
-      - {{ line }}
+      - "{{ line }}"
       {%- endfor %}
