@@ -20,6 +20,9 @@ pillar_roots:
   base:
     - {{ formulas_base_dir }}/suse-base-profile/pillar/
     - {{ salt_base_dir }}/pillar/
+module_dirs:
+  - {{ salt_base_dir }}/modules
+  - {{ formulas_base_dir }}/suse-base-profile/modules/
 ```
 
 ### pillar/top.sls
