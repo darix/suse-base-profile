@@ -5,7 +5,7 @@
 {%- set autofs_modules   = ["files"] %}
 
 # TODO: handle ALP and friends # TODO needs handling for 15.6?
-{%- if grains.osfullname == "openSUSE Tumbleweed" or (grains.osfullname in ["Leap", "SLES" ] and grains.osrelease > 15.5) %}
+{%- if grains.osfullname == "openSUSE Tumbleweed" or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) > 15.5) %}
 {%- do passwd_modules.append("systemd") %}
 {%- do group_modules.append("[SUCCESS=merge] systemd") %}
 {%- endif %}
