@@ -34,13 +34,13 @@
 dehydrated_package:
   pkg.installed:
     - pkgs:
-      - dehydrated
+      - dehydrated: '>= 0.7.1'
       - acl
       {%- if 'use_apache' in pillar.dehydrated and pillar.dehydrated.use_apache %}
-      - dehydrated-apache2
+      - dehydrated-apache2: '>= 0.7.1'
       {%- endif %}
       {%- if 'use_nginx' in pillar.dehydrated and pillar.dehydrated.use_nginx %}
-      - dehydrated-nginx
+      - dehydrated-nginx: '>= 0.7.1'
       {%- endif %}
       {%- if use_acmeresponder %}
       - dehydrated-acmeresponder
@@ -64,7 +64,7 @@ dehydrated_services:
 
 {%-     if 'config' in pillar.dehydrated %}
 {%-       set setting = 'CONFIG_D' %}
-{%-       set value   = '/etc/dehydrated/config.d' %}
+{%-       set value   = '${BASEDIR}/config.d' %}
 #
 # make sure that config.d is loaded
 #
@@ -226,6 +226,12 @@ dehydrated_timer_service:
     - enable: True
 #/ if not(keepalived)
 {%-       endif %}
+
+dehydrated_postrunhooks_service:
+  service.enabled:
+    - name: dehydrated-postrun-hooks.service
+    - require:
+      - dehydrated_timer_service
 
 # this is the hash for "https://acme-v02.api.letsencrypt.org/directory\n"
 {%-       set ca_hashed_url = "aHR0cHM6Ly9hY21lLXYwMi5hcGkubGV0c2VuY3J5cHQub3JnL2RpcmVjdG9yeQo" %}
