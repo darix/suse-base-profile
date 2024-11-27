@@ -8,8 +8,8 @@ resolv_conf:
     - follow_symlinks: false
     - context:
       default_options:
-        - "rotate"
-        - "attempts=3"
+        - "timeout:1"
+        - "attempts:3"
     - names:
       - /etc/resolv.conf:
         - source: salt://{{ slspath }}/files/etc/resolv.conf.j2
