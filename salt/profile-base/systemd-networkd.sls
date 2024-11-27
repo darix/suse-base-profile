@@ -1,5 +1,10 @@
 {%- from 'profile-base/helpers/networkd_helpers.sls' import networkd_config  %}
 
+systemd_network_packages:
+  pkg.installed:
+   - names:
+     - systemd-network
+
 # other types of systemd-network files need:
 #  1. define file naming index
 #  2. add to the logic below
@@ -34,9 +39,24 @@
 {%-       endif %}
 {%      endfor %}
 
+wicked_disable:
+  service.dead:
+    - name: wicked
+    - enable: False
+
+systemd_networkd:
+  service.running:
+    - name: systemd-networkd
+    - enable: true
+    - require:
+      - wicked_disable
+      - systemd_network_packages
+
 systemd_networkctl_reload:
   cmd.run:
     - name: '/usr/bin/networkctl reload'
+    - require:
+      - systemd_networkd
 
 {%-   endif %}
 {%- endif %}
