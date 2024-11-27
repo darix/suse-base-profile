@@ -3,7 +3,7 @@
 {%- endif %}
 
 {%- if "config" in pillar.network.resolver %}
-{%-   if "serachlist" in pillar.network.resolver.config %}
+{%-   if "searchlist" in pillar.network.resolver.config %}
 search {{ pillar.network.resolver.config.searchlist | join(' ') }}
 {%- endif %}
 {%- if 'nameservers' in pillar.network.resolver.config %}
