@@ -4,7 +4,7 @@ uninstall_syslog_ng_package:
       - syslog-ng
 
 {%- if 'syslog' in pillar %}
-{%- set rsyslog_version_dep = '8.2306.0' %}
+{%- set rsyslog_version_dep = '>= 8.2406.0' %}
 rsyslog_package:
   pkg.installed:
     - pkgs:
