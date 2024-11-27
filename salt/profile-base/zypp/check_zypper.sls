@@ -29,7 +29,7 @@ zypper_check_ignores:
     - template: jinja
     - names:
       - /etc/monitoring-plugins/check_zypper-ignores.txt:
-        - source: salt://{{ slspath }}/files/etc/monitoring-plugins/check_zypper-ignores.txt.j2
+        - source: salt://profile-base/files/etc/monitoring-plugins/check_zypper-ignores.txt.j2
       - /etc/nagios/check_zypper-ignores.txt:
-        - source: salt://{{ slspath }}/files/etc/monitoring-plugins/check_zypper-ignores.txt.j2
+        - source: salt://profile-base/files/etc/monitoring-plugins/check_zypper-ignores.txt.j2
 {%- endif %}
