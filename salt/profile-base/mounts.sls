@@ -13,7 +13,7 @@
 
 mountpoint{{ cleanedup_mount_name }}:
   mount.swap:
-    name: {{ mount_data['device'] }}
+   - name: {{ mount_data['device'] }}
 {{ mount_option_value('persist', mount_data) }}
 
     {%- else %}
