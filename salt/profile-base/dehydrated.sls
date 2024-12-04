@@ -230,8 +230,6 @@ dehydrated_timer_service:
 dehydrated_postrunhooks_service:
   service.enabled:
     - name: dehydrated-postrun-hooks.service
-    - require:
-      - dehydrated_timer_service
 
 # this is the hash for "https://acme-v02.api.letsencrypt.org/directory\n"
 {%-       set ca_hashed_url = "aHR0cHM6Ly9hY21lLXYwMi5hcGkubGV0c2VuY3J5cHQub3JnL2RpcmVjdG9yeQo" %}
