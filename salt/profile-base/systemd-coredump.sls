@@ -1,4 +1,4 @@
-{%- if grains.osfullname == "openSUSE Tumbleweed" or (grains.osfullname in ["Leap", "SLES" ] and grains.osrelease_info[0] > 12) %}
+{%- if (grains.osfullname in ["Leap", "SLES" ] and grains.osrelease_info[0] > 12) %}
   systemd_coredump_packages:
      pkg.installed:
       - names:
