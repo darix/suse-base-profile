@@ -74,15 +74,27 @@ def run():
           password_file = section_data['password-file']
           requires = ['resticprofile_config']
 
-          config[cmdrun_genkey] = {
-            'cmd.run': [
-              {'name': f'resticprofile generate --random-key {key_size} > {password_file}'},
-              {'creates': password_file},
-              {'runas': 'root'},
-              {'umask': '077'},
-              {'require': requires },
-            ]
-          }
+          if 'password' in section_data:
+              config[cmdrun_genkey] = {
+                'file.managed': [
+                  {'name': password_file'},
+                  {'content': section_data['password']},
+                  {'user': 'root'},
+                  {'group': 'root'},
+                  {'mode': '0600'},
+                  {'require': requires },
+                ]
+              }
+          else:
+              config[cmdrun_genkey] = {
+                'cmd.run': [
+                  {'name': f'resticprofile generate --random-key {key_size} > {password_file}'},
+                  {'creates': password_file},
+                  {'runas': 'root'},
+                  {'umask': '077'},
+                  {'require': requires },
+                ]
+              }
 
         if is_local_repository(section_data):
 
