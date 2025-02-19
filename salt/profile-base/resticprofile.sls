@@ -77,7 +77,7 @@ def run():
           if 'password' in section_data:
               config[cmdrun_genkey] = {
                 'file.managed': [
-                  {'name': password_file'},
+                  {'name': password_file},
                   {'content': section_data['password']},
                   {'user': 'root'},
                   {'group': 'root'},
