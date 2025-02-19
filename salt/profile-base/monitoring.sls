@@ -97,7 +97,13 @@ nrpe_service:
   service.running:
     - name: nrpe
     - enable: True
+    - require:
+      - nrpe_config
+      - nrpe_d_config
     - watch:
+      - nrpe_config
+      - nrpe_d_config
+    - onchanges:
       - nrpe_config
       - nrpe_d_config
 {%- endif %}

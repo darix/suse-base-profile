@@ -50,6 +50,10 @@
     - require:
       - {{ cleaned_service_name }}
     {%- endif %}
+    - onchanges:
+      - systemd_daemon_reload
+    - require:
+      - systemd_daemon_reload
     - watch:
       - systemd_daemon_reload
     - onchanges:

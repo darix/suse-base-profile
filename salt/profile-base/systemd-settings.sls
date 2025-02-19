@@ -21,5 +21,9 @@ systemd_journald_service:
   service.running:
     - name: systemd-journald
     - enable: True
+    - require:
+      - systemd_journald_settings
+    - onchanges:
+      - systemd_journald_settings
     - watch:
       - systemd_journald_settings

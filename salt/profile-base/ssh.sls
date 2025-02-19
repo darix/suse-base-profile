@@ -24,6 +24,10 @@ openssh_service:
   service.running:
     - name: sshd
     - enable: True
+    - require:
+      - openssh_config
+    - onchanges:
+      - openssh_config
     - watch:
       - openssh_config
 

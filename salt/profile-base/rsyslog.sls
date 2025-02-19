@@ -34,4 +34,6 @@ rsyslog_service:
       - rsyslog_remote_host
     - watch:
       - rsyslog_remote_host
+    - onchanges:
+      - rsyslog_remote_host
 {%- endif %}

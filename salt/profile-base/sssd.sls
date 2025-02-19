@@ -35,6 +35,9 @@ sssd_service:
     - enable: True
     - require:
       - sssd_pam_enable
+      - sssd_config
+    - onchanges:
+      - sssd_config
     - watch:
       - sssd_config
 {%- endif %}

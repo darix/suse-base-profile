@@ -26,5 +26,9 @@ chrony_service:
     - enable: True
     - require:
       - cleanup_ntp
+    - onchange:
+      - chrony_config
+    - require:
+      - chrony_config
     - watch:
       - chrony_config

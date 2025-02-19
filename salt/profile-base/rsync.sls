@@ -30,6 +30,10 @@ rsyncd_service:
     - enable: True
     - watch:
       - rsyncd_config
+    - require:
+      - rsyncd_config
+    - onchanges:
+      - rsyncd_config
 {%- else %}
 rsyncd_socket_dead:
   service.dead:
