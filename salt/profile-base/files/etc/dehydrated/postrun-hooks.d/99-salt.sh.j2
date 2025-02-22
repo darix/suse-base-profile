@@ -1,0 +1,20 @@
+{%- from 'profile-base/helpers/dehydrated_helpers.sls' import acls %}
+{%- from 'profile-base/helpers/dehydrated_helpers.sls' import postrun_hooks %}
+{%- from 'profile-base/helpers/dehydrated_helpers.sls' import services %}
+#!/bin/bash
+check_recent_cert() {
+  cert=$1
+  local cert_time=$(date -d "$(openssl x509 -in "$cert" -noout -startdate | cut -d= -f2)" +%s)
+  local current_time=$(date +%s)
+  if [[ $(( current_time - cert_time )) -le 600 ]]; then
+    return 0
+  fi
+  return 1
+}
+{%- for certname, certdata in pillar.dehydrated.certs.items() %}
+if check_recent_cert {{ salt['dehydrated_helper.certpaths'](certdata)[0] }} ; then
+{{ acls(certdata) }}
+{{ postrun_hooks(certdata) }}
+{{ services(certdata) }}
+fi
+{%- endfor %}

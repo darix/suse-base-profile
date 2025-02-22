@@ -22,11 +22,6 @@
 {%-       set use_acmeresponder = pillar.dehydrated.use_acmeresponder %}
 {%-     endif %}
 
-{%-     set cert_types = ['rsa', 'ecdsa' ] %}
-{%-     if 'cert_types' in pillar.dehydrated %}
-{%-       set cert_types = pillar.dehydrated.cert_types %}
-{%-     endif %}
-
 {%-     set cert_services     = [] %}
 {%-     set cert_postrunhooks = [] %}
 {%-     set cert_acls         = [] %}
@@ -106,9 +101,8 @@ dehydrated_domains:
 
 {%-     for certname, certdata in pillar.dehydrated.certs.items() %}
 
-{%-       if 'cert_types' in certdata %}
-{%-           set cert_types = certdata.cert_types %}
-{%-       endif %}
+{%-       set cert_types = salt['dehydrated_helper.certtypes'](certdata) %}
+
 
 {%-       if 'services' in certdata %}
 {%-          do cert_services.append(certdata.services) %}
@@ -167,29 +161,7 @@ dehydrated_postrunhooks_hooks:
     - group: dehydrated
     - mode: '0750'
     - name: /etc/dehydrated/postrun-hooks.d/99-salt.sh
-    - contents:
-      - '#!/bin/bash'
-      {%- for line in cert_acls %}
-      - '{{ line }}'
-      {%- endfor %}
-      {%- for lines in cert_postrunhooks %}
-      {%-   if lines is string %}
-      - '{{ lines }}'
-      {%-   else %}
-      {%-     for line in lines %}
-      - '{{ line }}'
-      {%-     endfor %}
-      {%-   endif %}
-      {%- endfor %}
-      {%- for services in cert_services %}
-      {%-   if services is string %}
-      - '/usr/bin/systemctl is-active {{ services }} && /usr/bin/systemctl try-reload-or-restart {{ service }}'
-      {%-   else %}
-      {%-     for service in services %}
-      - '/usr/bin/systemctl is-active {{ service }} && /usr/bin/systemctl try-reload-or-restart {{ service }}'
-      {%-     endfor %}
-      {%-   endif %}
-      {%- endfor %}
+    - source: salt://{{ slspath }}/files/etc/dehydrated/postrun-hooks.d/99-salt.sh.j2
 {%- endif %}
 
 {%-     if deploy_hooks %}
