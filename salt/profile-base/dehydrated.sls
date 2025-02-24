@@ -160,6 +160,7 @@ dehydrated_postrunhooks_hooks:
     - user: root
     - group: dehydrated
     - mode: '0750'
+    - template: jinja
     - name: /etc/dehydrated/postrun-hooks.d/99-salt.sh
     - source: salt://{{ slspath }}/files/etc/dehydrated/postrun-hooks.d/99-salt.sh.j2
 {%- endif %}
