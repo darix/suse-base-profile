@@ -46,6 +46,7 @@
 {{ restart_section }}:
   cmd.run:
     - name: '/usr/bin/systemctl try-restart {{ service }}'
+    - onlyif: '/usr/bin/systemctl is-active {{ service }}'
     {%- if cleaned_service_name in salt['cp.list_states']() %}
     - require:
       - {{ cleaned_service_name }}
