@@ -1,3 +1,4 @@
+#!py
 #
 # suse-base-profile
 #
@@ -17,7 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-#!py
 
 # usage example
 # salt 'yourhosthere*' state.apply profile-base.dehydrated-cleanup-postrun-hooks
