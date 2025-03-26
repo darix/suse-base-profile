@@ -1,3 +1,22 @@
+#
+# suse-base-profile
+#
+# Copyright (C) 2025   darix
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 {%- set modules_with_separate_packages = ["apparmor", "asn", "auth_mellon", "auth_mellon-diagnostics", "auth_memcookie", "auth_signature", "form", "maxminddb", "perl", "php7", "wsgi", "xforward" ] %}
 {%- set has_filetree = 'configs' in pillar and 'etc' in pillar.configs and 'apache2' in pillar.configs.etc %}
 {%- if "sysconfig" in pillar and "apache2" in pillar.sysconfig %}
