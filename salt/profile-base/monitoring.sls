@@ -94,23 +94,6 @@ nrpe_sudo_rules:
       - /etc/sudoers.d/99-salt-monitoring:
         - source: salt://{{ slspath }}/files/etc/sudoers.d/99-salt-monitoring.j2
 
-{%- if 'check_haproxy' in pillar.monitoring.checks and 'nagiosgroups' in pillar.monitoring %}
-fix_nagios_user_groups_for_haproxy:
-  user.present:
-    - name: nagios
-    - groups:
-  {%- for entry in pillar.monitoring.nagiosgroups | sort %}
-      - {{ entry }}
-  {%- endfor %}
-    - require:
-      - monitoring_packages
-      - haproxy.install
-    - require_in:
-      - nrpe_service
-    - onchanges_in:
-      - nrpe_service
-{%- endif %}
-
 
 nrpe_service:
   service.running:
