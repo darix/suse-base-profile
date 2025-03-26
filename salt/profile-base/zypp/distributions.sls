@@ -1,3 +1,4 @@
+#!py
 #
 # suse-base-profile
 #
@@ -17,7 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-#!py
 from salt.exceptions import SaltConfigurationError
 import os.path
 
