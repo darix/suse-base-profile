@@ -24,6 +24,7 @@ timezone_packages:
 
 timezone_symlink:
    file.symlink:
+     - force: True
      - require:
        - timezone_packages
      - name: /etc/localtime
