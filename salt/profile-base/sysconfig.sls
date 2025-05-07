@@ -20,7 +20,11 @@
 {%- if "sysconfig" in pillar %}
 {%- for file, file_data in pillar.sysconfig.items() %}
   {%- for key in file_data %}
+{%- if key | regex_search("^POSTFIX_ADD", ignorecase=True) is not none %}
+{%- set setting = key %}
+{%- else %}
 {%- set setting = key|upper %}
+{%- endif %}
 {%- if 'value' in file_data[key] %}
   {%- set value = file_data[key]['value'] %}
 {%- else %}
