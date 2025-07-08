@@ -20,7 +20,7 @@ Include /etc/ssh/sshd_config.d/*.conf
 # OpenSSH is to specify options with their default value where
 # possible, but leave them commented.  Uncommented options override the
 # default value.
-{%- TODO if TW or suse_version > 16 %}
+{%- if grains.osfullname == "openSUSE Tumbleweed" %}
 Include /usr/etc/ssh/sshd_config.d/*.conf
 {%- endif %}
 
