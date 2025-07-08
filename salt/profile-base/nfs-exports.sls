@@ -72,7 +72,7 @@ def run():
 
         idmap_domain = __pillar__["nfs_server"].get("idmap_domain", "localdomain")
 
-        if __grains__["oscodename"] == 'openSUSE Tumbleweed':
+        if __grains__["oscodename"] == 'openSUSE Tumbleweed' or (__grains__["osfullname"] in ["Leap", "SLES" ] and float(__grains__["osrelease"]) >= 16):
             idmapd_conf = "/etc/idmapd.conf.d/salt.conf"
             config["fix_idmap_domain"] = {
                 "file.managed": [

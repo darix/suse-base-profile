@@ -42,7 +42,7 @@ ssh:
   ClientAliveInterval:             30
 
   Subsystem:
-    {%- if grains.osfullname == "openSUSE Tumbleweed" %}
+    {%- if (grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
     - sftp    /usr/libexec/ssh/sftp-server
     {%- else %}
     - sftp    /usr/lib/ssh/sftp-server

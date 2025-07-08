@@ -38,7 +38,7 @@ locale_packages:
   pkg.installed:
     - names:
       - systemd
-      {%- if grains.osfullname == 'openSUSE Tumbleweed' and locale_language in ['en_US.UTF-8', 'C.UTF-8'] %}
+      {%- if ((grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16)) and locale_language in ['en_US.UTF-8', 'C.UTF-8'] %}
       - glibc-locale-base
       {%- else %}
       - glibc-locale
