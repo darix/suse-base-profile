@@ -3,17 +3,26 @@
 {%- if 'greeting' in pillar %}
 # {{- pillar.greeting }}
 {%- endif %}
-#       $OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
+#       $OpenBSD: sshd_config,v 1.105 2024/12/03 14:12:47 dtucker Exp $
 
 # This is the sshd server system-wide configuration file.  See
 # sshd_config(5) for more information.
 
 # This sshd was compiled with PATH=/usr/bin:/bin:/usr/sbin:/sbin
 
+# To modify the system-wide sshd configuration, create a "*.conf" file under
+# "/etc/ssh/sshd_config.d/" which will be automatically included below.
+# Don't edit this configuration file itself if possible to avoid update
+# problems.
+Include /etc/ssh/sshd_config.d/*.conf
+
 # The strategy used for options in the default sshd_config shipped with
 # OpenSSH is to specify options with their default value where
 # possible, but leave them commented.  Uncommented options override the
 # default value.
+{%- TODO if TW or suse_version > 16 %}
+Include /usr/etc/ssh/sshd_config.d/*.conf
+{%- endif %}
 
 #Port 22
 {{- ssh_config_option('Port') }}
@@ -51,7 +60,7 @@
 
 #LoginGraceTime 2m
 {{- ssh_config_option('LoginGraceTime') }}
-#PermitRootLogin no
+#PermitRootLogin prohibit-password
 {{- ssh_config_option('PermitRootLogin') }}
 #StrictModes yes
 {{- ssh_config_option('StrictModes') }}
@@ -114,7 +123,10 @@
 # Change to no to disable s/key passwords
 #ChallengeResponseAuthentication yes
 {{- ssh_config_option('ChallengeResponseAuthentication') }}
-#KbdInteractiveAuthentication The default is to use whatever value ChallengeResponseAuthentication is set to (by default yes).
+# Change to "no" to disable keyboard-interactive authentication.  Depending on
+# the system's configuration, this may involve passwords, challenge-response,
+# one-time passwords or some combination of these and other methods.
+#KbdInteractiveAuthentication yes
 {{- ssh_config_option('KbdInteractiveAuthentication') }}
 
 
@@ -145,13 +157,13 @@
 
 # Set this to 'yes' to enable PAM authentication, account processing,
 # and session processing. If this is enabled, PAM authentication will
-# be allowed through the ChallengeResponseAuthentication and
+# be allowed through the KbdInteractiveAuthentication and
 # PasswordAuthentication.  Depending on your PAM configuration,
-# PAM authentication via ChallengeResponseAuthentication may bypass
-# the setting of "PermitRootLogin without-password".
+# PAM authentication via KbdInteractiveAuthentication may bypass
+# the setting of "PermitRootLogin prohibit-password".
 # If you just want the PAM account and session checks to run without
 # PAM authentication, then enable this but set PasswordAuthentication
-# and ChallengeResponseAuthentication to 'no'.
+# and KbdInteractiveAuthentication to 'no'.
 #UsePAM yes
 {{- ssh_config_option('UsePAM') }}
 #UsePAMCheckLocks no
@@ -188,7 +200,7 @@
 {{- ssh_config_option('XAuthLocation') }}
 #PermitTTY yes
 {{- ssh_config_option('PermitTTY') }}
-#PrintMotd yes
+#PrintMotd no
 {{- ssh_config_option('PrintMotd') }}
 #PrintLastLog yes
 {{- ssh_config_option('PrintLastLog') }}
@@ -238,6 +250,10 @@
 #AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
 #AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
 #AcceptEnv LC_IDENTIFICATION LC_ALL
+
+# Accept environment variables useful for terminal identification.
+#AcceptEnv LC_TERMINAL LC_TERMINAL_VERSION
+#AcceptEnv COLORTERM TERM_PROGRAM TERM_PROGRAM_VERSION
 {{- ssh_config_option('AcceptEnv') }}
 {{- ssh_config_option('SetEnv') }}
 

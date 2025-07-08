@@ -51,6 +51,9 @@ ssh:
     - LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
     - LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
     - LC_IDENTIFICATION LC_ALL
+    # Accept environment variables useful for terminal identification.
+    - LC_TERMINAL LC_TERMINAL_VERSION
+    - COLORTERM TERM_PROGRAM TERM_PROGRAM_VERSION
 # This is just an example how to do Match entries
 #  Match:
 #    'User gitlab':
