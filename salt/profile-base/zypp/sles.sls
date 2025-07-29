@@ -101,6 +101,7 @@
     - name:       {{ repo_id }}
     - baseurl:    {{ baseurl }}/SUSE/Backports/SLE-{{ product_release }}_{{ grains.osarch }}/standard  # noqa: 204
     - gpgcheck: 1
+    - refresh: True
 {%- endif %}
 
 sles_zypper_refresh:
