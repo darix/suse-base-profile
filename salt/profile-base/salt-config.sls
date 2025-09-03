@@ -35,6 +35,7 @@ master_drop_in:
        - /etc/salt/master.d/salt_managed.conf:
          - source: salt://{{ slspath }}/files/etc/salt/master.d.config.j2
 
+{%- if pillar.get("step:client_config:use_cron_force_renew", False) %}
 salt_master_cert_refresh_cronjob:
   file.managed:
     - name: /etc/cron.daily/salt_step_ca_cert_mode_force_deploy
@@ -44,6 +45,18 @@ salt_master_cert_refresh_cronjob:
     - contents:
       - "#!/bin/bash"
       - "salt -N step_ca_cert_mode_force_deploy_nodes state.apply step-ca"
+{%- else %}
+salt_master_cert_refresh_cronjob:
+  file.absent:
+    - name: /etc/cron.daily/salt_step_ca_cert_mode_force_deploy
+{%- for minion_id, fqdn in salt['mine.get']("N@step_ca_cert_mode_force_deploy_nodes", 'fqdn', tgt_type='compound') | dictsort() %}
+force_deploy_service_{{ minion_id | regex_replace('\.-', '_') }}:
+  service.running:
+     - name: step-ca-renew-certificate-mode@{{ minion_id }}.timer
+     - enable: True
+
+{%- endfor %}
+{%- endif %}
 {%- endif %}
 
 {%- if 'nsca_ng' in pillar and 'client' in pillar.nsca_ng and 'config' in pillar.nsca_ng.client %}
