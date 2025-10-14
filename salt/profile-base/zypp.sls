@@ -29,6 +29,7 @@ include:
   - .zypp.leap
   {%- endif %}
   - .zypp.openh264
+  - .zypp.buildservice-repositories
   - .zypp.isv-repositories
   - .zypp.check_zypper
   - .zypp.locks
