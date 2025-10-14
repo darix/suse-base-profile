@@ -44,12 +44,16 @@
       {%- set project_name_for_url = project_name | regex_replace(':', ':/') %}
       {%- set repo_base_url = "{baseurl}/{project_name_for_url}/".format(baseurl=baseurl, project_name_for_url=project_name_for_url) %}  # noqa: 204
       {%- set repo_url = salt['zypp_helper.guess_repository'](repo_base_url) %}
+      {%- set repomd_key_url = salt['zypp_helper.repomd_key_url'](repo_url) %}
 
 {{ repo_id }}:
   pkgrepo.managed:
     - name:       {{ repo_id }}
     - humanname:  {{ project_name }}
     - baseurl:    {{ repo_url }}
+    {%- if repomd_key_url %}
+    - gpgkey: {{ repomd_key_url }}
+    {%- endif %}
     - gpgcheck: 1
     - refresh: True
 

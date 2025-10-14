@@ -25,6 +25,13 @@ from salt.exceptions import SaltRenderError
 
 log = logging.getLogger(__name__)
 
+def repomd_key_url(baseurl):
+    repomd_key_path = 'repodata/repomd.xml.key'
+    repomd_url = f"{baseurl}/{repomd_key_path}"
+    result = requests.head(repomd_url)
+    log.info(f"Querying {repomd_url} resulted in {result.status_code}")
+    if result.status_code in [200, 302, 301]:
+        return repomd_url
 
 def guess_repository(baseurl):
     repository_list = []
