@@ -31,7 +31,7 @@
   {%- if 'baseurl' in pillar.zypp %}
   {%- set baseurl = pillar.zypp.baseurl %}
   {%- else %}
-  {%- set baseurl = "http://download." ~ grains.domain %}
+  {%- set baseurl = "https://download." ~ grains.domain %}
   {%- endif %}
 
   {%- if "always_use_obs_instance" in pillar.zypp and pillar.zypp.always_use_obs_instance %}

@@ -22,7 +22,7 @@
   {%- if 'baseurl' in pillar.zypp %}
   {%- set baseurl = pillar.zypp.baseurl %}
   {%- else %}
-  {%- set baseurl = "http://download." ~ grains.domain %}
+  {%- set baseurl = "https://download." ~ grains.domain %}
   {%- endif %}
 
   {%- set repositories = [] %}
