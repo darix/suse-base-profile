@@ -16,3 +16,11 @@
 {%- for ip_address, hostnames in pillar.network.resolver.hosts.items() %}
 {{ "{:<42}".format(ip_address) }} {{ hostnames | join(' ') }}
 {%- endfor %}
+
+{%- for mine_config in pillar.network.resolver.get("hosts_mine", []) %}
+  {%- for hostname, ip_addresses in salt["mine.get"](mine_config['mine_match'], mine_config['mine_function'], tgt_type="compound").items() %}
+    {%- for ip_address in ip_addresses %}
+{{ "{:<42}".format(ip_address) }} {{ hostname }}
+    {%- endfor %}
+  {%- endfor %}
+{%- endfor %}
