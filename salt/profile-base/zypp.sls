@@ -261,7 +261,7 @@ class ZyppConfigurator:
         ]
       }
 
-    base_service_package = "openSUSE-repos-{__salt__['grains.get']('osfullname')}"
+    base_service_package = f"openSUSE-repos-{__salt__['grains.get']('osfullname')}"
     self.config["zypper_remove_service_package"] = {
       "pkg.purged": [
         {'pkgs': [ base_service_package, f"{base_service_package}-NVIDIA", ]},
