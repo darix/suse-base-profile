@@ -104,6 +104,7 @@ class ZyppConfigurator:
         osrelease_info = __salt__['grains.get']('osrelease_info', 0)
         osmajorrelease = __salt__['grains.get']('osmajorrelease', 0)
         osarch         = __salt__['grains.get']('osarch')
+        osrelease      = __salt__['grains.get']('osrelease', 0)
 
         if len(osrelease_info) > 1:
           product_release =     f"{osrelease_info[0]}-SP{osrelease_info[1]}"
@@ -114,9 +115,39 @@ class ZyppConfigurator:
 
         match __salt__['grains.get']('osmajorrelease', 0):
           case 16:
+            for product_name in __salt__['grains.get'](f"zypp:products:{osmajorrelease}", []):
+              repo_baseurl = f"{self.baseurl}/SUSE/Products/{product_name}/{osrelease}/{osarch}/product"
+              self.configure_repository(state_name=product_name, repo_id=product_name, repo_name=product_name, repo_url=f"{repo_baseurl}/")
+
+              if enable_debug:
+                debug_repo_id = f"{repo_id}-debug"
+                self.configure_repository(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=debug_repo_id, repo_url=f"{repo_baseurl}_debug/")
+              if enable_source:
+                source_repo_id = f"{repo_id}-source"
+                self.configure_repository(state_name=source_repo_id, repo_id=source_repo_id, repo_name=source_repo_id, repo_url=f"{repo_baseurl}_source/")
+
             if products_enable_backports:
-              repo_id =  "Packagehub"
-              self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/SUSE/Backports/SLE-{product_release}_{grains.osarch}/standard/")
+              backports_repo_id =  "Backports"
+              backports_repo_baseurl = f"{self.baseurl}/SUSE/Backports/SLE-{osrelease}_{osarch}/standard"
+              self.configure_repository(state_name=backports_repo_id, repo_id=backports_repo_id, repo_name=backports_repo_id, repo_url=f"{backports_repo_baseurl}/")
+
+              packageup_repo_id = "PackageHub"
+              packagehub_repo_baseurl = f"{self.baseurl}/SUSE/Products/PackageHub/{osrelease}/{osarch}/product"
+              self.configure_repository(state_name=packageup_repo_id, repo_id=packageup_repo_id, repo_name=packageup_repo_id, repo_url=f"{packagehub_repo_baseurl}/")
+
+              if enable_debug:
+                backports_debug_repo_id = f"{backports_repo_id}-debug"
+                self.configure_repository(state_name=backports_debug_repo_id, repo_id=backports_debug_repo_id, repo_name=backports_debug_repo_id, repo_url=f"{backports_repo_baseurl}_debug/")
+
+                packagehub_debug_repo_id = f"{packagehub_repo_id}-debug"
+                self.configure_repository(state_name=packagehub_debug_repo_id, repo_id=packagehub_debug_repo_id, repo_name=packagehub_debug_repo_id, repo_url=f"{packagehub_repo_baseurl}_debug/")
+
+              if enable_source:
+                backport_source_repo_id = f"{backports_repo_id}-source"
+                self.configure_repository(state_name=backport_source_repo_id, repo_id=backport_source_repo_id, repo_name=backport_source_repo_id, repo_url=f"{backports_repo_baseurl}_source/")
+
+                packagehub_source_repo_id = f"{packagehub_repo_id}-source"
+                self.configure_repository(state_name=packagehub_source_repo_id, repo_id=packagehub_source_repo_id, repo_name=packagehub_source_repo_id, repo_url=f"{packagehub_repo_baseurl}_source/")
           case 15:
             repo_types = [ 'Product', 'Update' ]
             for product_name in __salt__['grains.get'](f"zypp:products:{osmajorrelease}", []):
