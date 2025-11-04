@@ -81,18 +81,18 @@ class ZyppConfigurator:
 
           if dist_repo == "non-oss":
             update_dir     = f"{update_basedir}-{dist_repo}"
-          self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/{distro_basedir}/repo/{dist_repo}/")
-          self.repository_config(state_name=update_repo_id, repo_id=update_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/update/{update_dir}/")
+          self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/{distro_basedir}/repo/{dist_repo}/")
+          self.configure_repository(state_name=update_repo_id, repo_id=update_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/update/{update_dir}/")
 
           if 'oss' == dist_repo and self.enable_debug:
-            self.repository_config(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/debug/{distro_basedir}/repo/{dist_repo}/")
+            self.configure_repository(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/debug/{distro_basedir}/repo/{dist_repo}/")
           else:
-            self.absent_repository_config(state_name=debug_repo_id, repo_id=debug_repo_id)
+            self.purge_repository(state_name=debug_repo_id, repo_id=debug_repo_id)
 
           if 'oss' == dist_repo and self.enable_source:
-            self.repository_config(state_name=source_repo_id, repo_id=source_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
+            self.configure_repository(state_name=source_repo_id, repo_id=source_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
           else:
-            self.absent_repository_config(state_name=source_repo_id, repo_id=source_repo_id)
+            self.purge_repository(state_name=source_repo_id, repo_id=source_repo_id)
 
       case 'SLES':
         products_enable_debug     = __salt__['pillar.get']('zypp:products_enable_debug', False)
@@ -116,20 +116,20 @@ class ZyppConfigurator:
           case 16:
             if products_enable_backports:
               repo_id =  "Packagehub"
-              self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/SUSE/Backports/SLE-{product_release}_{grains.osarch}/standard/")
+              self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/SUSE/Backports/SLE-{product_release}_{grains.osarch}/standard/")
           case 15:
             repo_types = [ 'Product', 'Update' ]
             for product_name in __salt__['grains.get'](f"zypp:products:{osmajorrelease}", []):
               for repo_type in repo_types:
                 do_refresh = repo_type == "Update"
                 repo_id = f"{product_name}-{repo_type}"
-                self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}/", refresh=do_refresh)
+                self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}/", refresh=do_refresh)
                 if products_enable_debug:
                   debug_repo_id = f"{repo_id}_debug"
-                  self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}_debug/", refresh=do_refresh)
+                  self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}_debug/", refresh=do_refresh)
             if products_enable_backports:
               repo_id =  "Packagehub"
-              self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/SUSE/Backports/SLE-{product_release}_{grains.osarch}/standard/")
+              self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/SUSE/Backports/SLE-{product_release}_{grains.osarch}/standard/")
           case _:
             raise SaltRenderError(f"No handling yet for {__salt__['grains.get']('osfullname')} {__salt__['grains.get']('osmajorrelease', 0)}")
       case 'Leap':
@@ -150,17 +150,17 @@ class ZyppConfigurator:
               repo_id        = f"repo-{dist_repo}"
               debug_repo_id  = f"{repo_id}-debug"
               source_repo_id = f"{repo_id}-source"
-              self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/{distro_basedir}/repo/{dist_repo}/")
+              self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/{distro_basedir}/repo/{dist_repo}/")
 
               if dist_repo in ["oss", "non-oss"] and self.enable_debug:
-                self.repository_config(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=debug_repo_id, repo_url=f"{self.baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=False)
+                self.configure_repository(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=debug_repo_id, repo_url=f"{self.baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=False)
               else:
-                self.absent_repository_config(state_name=debug_repo_id, repo_id=debug_repo_id)
+                self.purge_repository(state_name=debug_repo_id, repo_id=debug_repo_id)
 
               if dist_repo == "oss" and self.enable_source:
-                self.repository_config(state_name=source_repo_id, repo_id=source_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
+                self.configure_repository(state_name=source_repo_id, repo_id=source_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
               else:
-                self.absent_repository_config(state_name=source_repo_id, repo_id=source_repo_id)
+                self.purge_repository(state_name=source_repo_id, repo_id=source_repo_id)
           case 15:
             dist_only_has_updates = ['backports', 'sle']
             dist_repositories.extend(dist_only_has_updates)
@@ -177,23 +177,23 @@ class ZyppConfigurator:
                 update_dir     = f"{update_basedir}-{dist_repo}"
 
               if not(dist_repo in dist_only_has_updates):
-                self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/{distro_basedir}/repo/{dist_repo}/", refresh=False)
-              self.repository_config(state_name=update_repo_id, repo_id=update_repo_id, repo_name=update_repo_id, repo_url=f"{self.baseurl}/update/{update_dir}/{dist_repo}/")
+                self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/{distro_basedir}/repo/{dist_repo}/", refresh=False)
+              self.configure_repository(state_name=update_repo_id, repo_id=update_repo_id, repo_name=update_repo_id, repo_url=f"{self.baseurl}/update/{update_dir}/{dist_repo}/")
 
               if dist_repo in ["oss", "non-oss"] and self.enable_debug:
-                self.repository_config(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=debug_repo_id, repo_url=f"{self.baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=False)
+                self.configure_repository(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=debug_repo_id, repo_url=f"{self.baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=False)
               else:
-                self.absent_repository_config(state_name=debug_repo_id, repo_id=debug_repo_id)
+                self.purge_repository(state_name=debug_repo_id, repo_id=debug_repo_id)
 
               if dist_repo != 'sle' and self.enable_debug:
-                self.repository_config(state_name=debug_update_repo_id, repo_id=debug_update_repo_id, repo_name=debug_update_repo_id, repo_url=f"{self.baseurl}/update/{update_dir}/{dist_repo}_debug/")
+                self.configure_repository(state_name=debug_update_repo_id, repo_id=debug_update_repo_id, repo_name=debug_update_repo_id, repo_url=f"{self.baseurl}/update/{update_dir}/{dist_repo}_debug/")
               else:
-                self.absent_repository_config(state_name=debug_update_repo_id, repo_id=debug_update_repo_id)
+                self.purge_repository(state_name=debug_update_repo_id, repo_id=debug_update_repo_id)
 
               if dist_repo in ["oss", "non-oss"] and self.enable_source:
-                self.repository_config(state_name=source_repo_id, repo_id=source_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
+                self.configure_repository(state_name=source_repo_id, repo_id=source_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
               else:
-                self.absent_repository_config(state_name=source_repo_id, repo_id=source_repo_id)
+                self.purge_repository(state_name=source_repo_id, repo_id=source_repo_id)
           case _:
             raise SaltRenderError(f"No handling yet for {__salt__['grains.get']('osfullname')} {__salt__['grains.get']('osmajorrelease', 0)}")
       case _:
@@ -216,7 +216,7 @@ class ZyppConfigurator:
 
       if codecs_url:
 
-        self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=project_name, repo_url=codecs_url)
+        self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=project_name, repo_url=codecs_url)
 
     for obs_instance, repositories_list in __salt__['pillar.get']('zypp:repositories',{}).items():
       if self.always_use_obs_instance:
@@ -233,10 +233,10 @@ class ZyppConfigurator:
         project_name_for_url = project_name.replace(':', ':/')
         repo_base_url        = f"{self.baseurl}/{project_name_for_url}/"
         repo_url             = __salt__['zypp_helper.guess_repository'](repo_base_url)
-        self.repository_config(state_name=cleaned_repo_id, repo_id=repo_id, repo_name=project_name, repo_url=repo_url)
+        self.configure_repository(state_name=cleaned_repo_id, repo_id=repo_id, repo_name=project_name, repo_url=repo_url)
 
     for repo_id, repodata in __salt__['pillar.get']('zypp:isv',{}).items():
-      self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repodata['name'],
+      self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repodata['name'],
         repo_url=repodata['baseurl'],
         refresh=repodata.get('refresh', True),
         gpgcheck=repodata.get('gpgcheck', 1),
@@ -248,7 +248,7 @@ class ZyppConfigurator:
       bad_repositories = [r for r in repos_on_system if not(r in self.repo_tracker.values())]
       for repo in bad_repositories:
         repo_id = f"zypp_purge_repo_{repo}"
-        self.absent_repository_config(state_name=repo_id, repo_id=repo, additional_fields=[{'require_in': list(self.repo_tracker.keys())}])
+        self.purge_repository(state_name=repo_id, repo_id=repo, additional_fields=[{'require_in': list(self.repo_tracker.keys())}])
 
     locked_packages = __salt__['pillar.get']('zypp:locks',[])
     if len(locked_packages) > 0:
@@ -302,7 +302,7 @@ class ZyppConfigurator:
         self.config[dirname] = {"file.absent": []}
 
 
-  def repository_config(self, state_name, repo_id, repo_name, repo_url, refresh=True, gpgcheck=True, gpgkey=None):
+  def configure_repository(self, state_name, repo_id, repo_name, repo_url, refresh=True, gpgcheck=True, gpgkey=None):
     if gpgkey is None:
       gpgkey = __salt__['zypp_helper.repomd_key_url'](repo_url)
 
@@ -323,7 +323,7 @@ class ZyppConfigurator:
     self.repo_tracker[state_name] = repo_id
     self.config[state_name] = ret
 
-  def absent_repository_config(self, state_name, repo_id, additional_fields=[]):
+  def purge_repository(self, state_name, repo_id, additional_fields=[]):
     fields = [
         {"name": repo_id}
       ]
