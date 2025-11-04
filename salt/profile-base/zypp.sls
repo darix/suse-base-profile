@@ -150,6 +150,7 @@ class ZyppConfigurator:
               repo_id        = f"repo-{dist_repo}"
               debug_repo_id  = f"{repo_id}-debug"
               source_repo_id = f"{repo_id}-source"
+
               self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/{distro_basedir}/repo/{dist_repo}/")
 
               if dist_repo in ["oss", "non-oss"] and self.enable_debug:
@@ -255,9 +256,17 @@ class ZyppConfigurator:
       self.config["zypper_disable_services"] = {
         "cmd.run": [
           {"name": f"/usr/bin/zypper modifyservice --disable {' '.join(all_services)}"},
-          {'require_in': list(self.repo_tracker.keys())}
+          {'require_in': list(self.repo_tracker.keys())},
+          {'require': ["zypper_remove_service_package"]}
         ]
       }
+
+    base_service_package = "openSUSE-repos-{__salt__['grains.get']('osfullname')}"
+    self.config["zypper_remove_service_package"] = {
+      "pkg.purged": [
+        {'pkgs': [ base_service_package, f"{base_service_package}-NVIDIA", ]},
+      ]
+    }
 
     locked_packages = __salt__['pillar.get']('zypp:locks',[])
     if len(locked_packages) > 0:
@@ -318,7 +327,7 @@ class ZyppConfigurator:
     ret = [
       {'name':      repo_id},
       {'humanname': repo_name},
-      {'self.baseurl':   repo_url},
+      {'baseurl':   repo_url},
       {'enabled':   True},
       {'gpgcheck':  1},
       {'refresh':   True},
