@@ -227,11 +227,14 @@ def run():
             if dist_repo in ["oss", "non-oss"] and enable_debug:
               repo_tracker[debug_repo_id] = debug_repo_id
               config[debug_repo_id] = repository_config(debug_repo_id, debug_repo_id, f"{baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=False, gpgcheck=1)
-
-              repo_tracker[debug_update_repo_id] = debug_update_repo_id
-              config[debug_update_repo_id] = repository_config(debug_update_repo_id, debug_update_repo_id, f"{baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=True, gpgcheck=1)
             else:
               config[debug_repo_id] = absent_repository_config(debug_repo_id)
+
+            if dist_repo != 'sle' and enable_debug:
+              repo_tracker[debug_update_repo_id] = debug_update_repo_id
+              config[debug_update_repo_id] = repository_config(debug_update_repo_id, debug_update_repo_id, f"{baseurl}/update/{update_dir}/{dist_repo}_debug/", refresh=True, gpgcheck=1)
+            else:
+              config[debug_update_repo_id] = absent_repository_config(debug_update_repo_id)
 
             if dist_repo in ["oss", "non-oss"] and enable_source:
               repo_tracker[source_repo_id] = source_repo_id
