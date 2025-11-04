@@ -197,7 +197,7 @@ def run():
             else:
               config[source_repo_id] = absent_repository_config(source_repo_id)
         case 15:
-          dist_repositories     = ['oss']
+          dist_repositories     = ['oss', 'backports', 'sle']
           dist_only_has_updates = ['backports', 'sle']
 
           if enable_non_oss:
@@ -222,7 +222,7 @@ def run():
               config[repo_id] = repository_config(repo_id, repo_id, f"{baseurl}/{distro_basedir}/repo/{dist_repo}/", refresh=False, gpgcheck=1)
 
             repo_tracker[update_repo_id] = update_repo_id
-            config[update_repo_id] = repository_config(update_repo_id, update_repo_id, f"{baseurl}/update/{update_dir}/", refresh=True, gpgcheck=1)
+            config[update_repo_id] = repository_config(update_repo_id, update_repo_id, f"{baseurl}/update/{update_dir}/{dist_repo}/", refresh=True, gpgcheck=1)
 
             if dist_repo in ["oss", "non-oss"] and enable_debug:
               repo_tracker[debug_repo_id] = debug_repo_id
