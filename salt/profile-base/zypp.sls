@@ -142,8 +142,6 @@ def run():
         repo_name       = f"SLE_{osrelease_info[0]}"
 
       match __salt__['grains.get']('osmajorrelease', 0):
-        # case 16:
-        #   log.info("do slfo here")
         case 15:
           repo_types = [ 'Product', 'Update' ]
           for product_name in __salt__['grains.get'](f"zypp:products:{osmajorrelease}", []):
@@ -294,9 +292,7 @@ def run():
     )
 
   if purge_untracked:
-    log.error(f"[zyppify] repo_tracker: {repo_tracker.values()}")
     repos_on_system = [f.replace('.repo', '') for f in os.listdir("/etc/zypp/repos.d")]
-    log.error(f"[zyppify] repos_on_system {repos_on_system}")
     bad_repositories = [r for r in repos_on_system if not(r in repo_tracker.keys())]
     for repo in bad_repositories:
       repo_id = f"zypp_purge_repo_{repo}"
