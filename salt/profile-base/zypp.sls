@@ -170,11 +170,11 @@ def run():
       if enable_non_oss:
         dist_repositories.append('non-oss')
 
+      distro_basedir = f"distribution/leap/{__salt__['grains.get']('osrelease')}"
+      update_basedir = f"leap/{__salt__['grains.get']('osrelease')}"
+
       match __salt__['grains.get']('osmajorrelease', 0):
         case 16:
-          distro_basedir = f"distribution/leap/{__salt__['grains.get']('osrelease')}"
-          update_basedir = f"leap/{__salt__['grains.get']('osrelease')}"
-
           for dist_repo in dist_repositories:
             repo_id        = f"repo-{dist_repo}"
             debug_repo_id  = f"{repo_id}-debug"
@@ -195,14 +195,8 @@ def run():
             else:
               config[source_repo_id] = absent_repository_config(source_repo_id)
         case 15:
-          dist_repositories     = ['oss', 'backports', 'sle']
           dist_only_has_updates = ['backports', 'sle']
-
-          if enable_non_oss:
-            dist_repositories.append('non-oss')
-
-          distro_basedir = f"distribution/leap/{__salt__['grains.get']('osrelease')}"
-          update_basedir = f"leap/{__salt__['grains.get']('osrelease')}"
+          dist_repositories.extend(dist_only_has_updates)
 
           for dist_repo in dist_repositories:
             repo_id        = f"repo-{dist_repo}"
