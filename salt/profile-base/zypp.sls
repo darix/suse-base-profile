@@ -82,7 +82,6 @@ def run():
 
   match __salt__['grains.get']('osfullname'):
     case 'openSUSE Tumbleweed':
-      log.info("do TW here")
       if always_use_obs_instance:
         baseurl = f"{baseurl}/obs"
 
@@ -133,11 +132,80 @@ def run():
         case _:
           raise SaltRenderError(f"No handling yet for {__salt__['grains.get']('osfullname')} {__salt__['grains.get']('osmajorrelease', 0)}")
     case 'Leap':
+      if always_use_obs_instance:
+        baseurl = f"{baseurl}/obs"
+
+      dist_repositories     = ['oss']
+
+      if enable_non_oss:
+        dist_repositories.append('non-oss')
+
       match __salt__['grains.get']('osmajorrelease', 0):
         case 16:
-          log.info("do slfo here")
+          distro_basedir = f"distribution/leap/{__salt__['grains.get']('osrelease')}"
+          update_basedir = f"leap/{__salt__['grains.get']('osrelease')}"
+
+          for dist_repo in dist_repositories:
+            repo_id        = f"repo-{dist_repo}"
+            debug_repo_id  = f"{repo_id}-debug"
+            source_repo_id = f"{repo_id}-source"
+
+            repo_tracker[repo_id] = repo_id
+            config[repo_id] = repository_config(repo_id, repo_id, f"{baseurl}/{distro_basedir}/repo/{dist_repo}/", refresh=True, gpgcheck=1)
+
+            if dist_repo in ["oss", "non-oss"] and enable_debug:
+              repo_tracker[debug_repo_id] = debug_repo_id
+              config[debug_repo_id] = repository_config(debug_repo_id, debug_repo_id, f"{baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=False, gpgcheck=1)
+            else:
+              config[debug_repo_id] = absent_repository_config(debug_repo_id)
+
+            if dist_repo == "oss" and enable_source:
+              repo_tracker[source_repo_id] = source_repo_id
+              config[source_repo_id] = repository_config(source_repo_id, repo_id, f"{baseurl}/source/{distro_basedir}/repo/{dist_repo}/", refresh=True, gpgcheck=1)
+            else:
+              config[source_repo_id] = absent_repository_config(source_repo_id)
         case 15:
-          log.info("do old leap here")
+          dist_repositories     = ['oss']
+          dist_only_has_updates = ['backports', 'sle']
+
+          if enable_non_oss:
+            dist_repositories.append('non-oss')
+
+          distro_basedir = f"distribution/leap/{__salt__['grains.get']('osrelease')}"
+          update_basedir = f"leap/{__salt__['grains.get']('osrelease')}"
+
+          for dist_repo in dist_repositories:
+            repo_id        = f"repo-{dist_repo}"
+            update_repo_id = f"{repo_id}-update"
+            debug_repo_id  = f"{repo_id}-debug"
+            debug_update_repo_id = f"{repo_id}-update-debug"
+            source_repo_id = f"{repo_id}-source"
+            update_dir     = update_basedir
+
+            if dist_repo == "non-oss":
+              update_dir     = f"{update_basedir}-{dist_repo}"
+
+            if not(dist_repo in dist_only_has_updates):
+              repo_tracker[repo_id] = repo_id
+              config[repo_id] = repository_config(repo_id, repo_id, f"{baseurl}/{distro_basedir}/repo/{dist_repo}/", refresh=False, gpgcheck=1)
+
+            repo_tracker[update_repo_id] = update_repo_id
+            config[update_repo_id] = repository_config(update_repo_id, update_repo_id, f"{baseurl}/update/{update_dir}/", refresh=True, gpgcheck=1)
+
+            if dist_repo in ["oss", "non-oss"] and enable_debug:
+              repo_tracker[debug_repo_id] = debug_repo_id
+              config[debug_repo_id] = repository_config(debug_repo_id, debug_repo_id, f"{baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=False, gpgcheck=1)
+
+              repo_tracker[debug_update_repo_id] = debug_update_repo_id
+              config[debug_update_repo_id] = repository_config(debug_update_repo_id, debug_update_repo_id, f"{baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=True, gpgcheck=1)
+            else:
+              config[debug_repo_id] = absent_repository_config(debug_repo_id)
+
+            if dist_repo in ["oss", "non-oss"] and enable_source:
+              repo_tracker[source_repo_id] = source_repo_id
+              config[source_repo_id] = repository_config(source_repo_id, repo_id, f"{baseurl}/source/{distro_basedir}/repo/{dist_repo}/", refresh=True, gpgcheck=1)
+            else:
+              config[source_repo_id] = absent_repository_config(source_repo_id)
         case _:
           raise SaltRenderError(f"No handling yet for {__salt__['grains.get']('osfullname')} {__salt__['grains.get']('osmajorrelease', 0)}")
     case _:
