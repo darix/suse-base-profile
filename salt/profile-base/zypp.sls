@@ -250,6 +250,15 @@ class ZyppConfigurator:
         repo_id = f"zypp_purge_repo_{repo}"
         self.purge_repository(state_name=repo_id, repo_id=repo, additional_fields=[{'require_in': list(self.repo_tracker.keys())}])
 
+    all_services = [f.replace('.service', '') for f in os.listdir("/etc/zypp/services.d")]
+    if len(all_services) > 0:
+      self.config["zypper_disable_services"] = {
+        "cmd.run": [
+          {"name": f"/usr/bin/zypper modifyservice --disable {' '.join(all_services)}"},
+          {'require_in': list(self.repo_tracker.keys())}
+        ]
+      }
+
     locked_packages = __salt__['pillar.get']('zypp:locks',[])
     if len(locked_packages) > 0:
       config_section = "zypp_lock_pkgs"
