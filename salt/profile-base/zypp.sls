@@ -18,329 +18,318 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# TODO:
+# - on leap 16 we need `zypper removeservice openSUSE`
+
 from salt.exceptions import SaltRenderError
 import os
 import logging
 
 log = logging.getLogger("zyppify")
 
-def repository_config(repo_id, repo_name, repo_url, refresh, gpgcheck, gpgkey=None):
-  if gpgkey is None:
-    gpgkey = __salt__['zypp_helper.repomd_key_url'](repo_url)
+class ZyppConfigurator:
+  def __init__(self):
+    self.config = {}
 
-  ret = {
-    "pkgrepo.managed": [
-      {'name':      repo_id},
-      {'humanname': repo_name},
-      {'baseurl':   repo_url},
-      {'enabled':   True},
-      {'gpgcheck':  1},
-      {'refresh':   True},
-    ]
-  }
+    self.repo_tracker = {}
 
-  if gpgkey:
-    ret["pkgrepo.managed"].append({'gpgkey': gpgkey})
+    self.baseurl                 = __salt__['pillar.get']('zypp:baseurl', f"https://download.{__salt__['grains.get']('domain')}")
+    self.always_use_obs_instance = __salt__['pillar.get']('zypp:always_use_obs_instance', False)
+    self.enable_non_oss          = __salt__['pillar.get']('zypp:enable_non_oss', False)
+    self.enable_debug            = __salt__['pillar.get']('zypp:enable_debug', False)
+    self.enable_source           = __salt__['pillar.get']('zypp:enable_source', False)
+    self.purge_untracked         = __salt__['pillar.get']('zypp:purge_untracked_repositories', True)
+    self.enable_openh264         = __salt__["pillar.get"]("zypp:products_enable_openh264", False)
 
-  return ret
+    for filename, file_settings in __salt__["pillar.get"]("zypp:config", {}).items():
+      cleaned_filename = filename.replace('.', '_')
 
-def absent_repository_config(repo_id):
-  return {"pkgrepo.absent": [
-    {"name": repo_id}
-  ]
-  }
+      for setting, value in file_settings.items():
+        cleaned_setting = setting.replace('.', '_')
 
-def run():
-  config = {}
+        config_section = f"{cleaned_filename}_{cleaned_setting}"
 
-  repo_tracker = {}
+        self.config[config_section] = {
+          "file.replace": [
+            {"name": f"/etc/zypp/{filename}"},
+            {"pattern": f"^(# +)?{setting} =.*"},
+            {"repl": f"{setting} = {value}"},
+          ]
+        }
 
-  baseurl = __salt__['pillar.get']('zypp:baseurl', f"https://download.{__salt__['grains.get']('domain')}")
-  always_use_obs_instance = __salt__['pillar.get']('zypp:always_use_obs_instance', False)
-  enable_non_oss = __salt__['pillar.get']('zypp:enable_non_oss', False)
-  enable_debug   = __salt__['pillar.get']('zypp:enable_debug', False)
-  enable_source  = __salt__['pillar.get']('zypp:enable_source', False)
-  purge_untracked = __salt__['pillar.get']('zypp:purge_untracked_repositories', True)
+    match __salt__['grains.get']('osfullname'):
+      case 'openSUSE Tumbleweed':
+        if self.always_use_obs_instance:
+          self.baseurl = f"{self.baseurl}/obs"
 
-  for filename, file_settings in __salt__["pillar.get"]("zypp:config", {}).items():
-    cleaned_filename = filename.replace('.', '_')
+        dist_repositories     = ['oss']
+        dist_only_has_updates = []
 
-    for setting, value in file_settings.items():
-      cleaned_setting = setting.replace('.', '_')
+        if self.enable_non_oss:
+          dist_repositories.append('non-oss')
 
-      config_section = f"{cleaned_filename}_{cleaned_setting}"
+        distro_basedir = 'tumbleweed'
+        update_basedir = 'tumbleweed'
+        update_for_baserepo = True
 
-      config[config_section] = {
-        "file.replace": [
-          {"name": f"/etc/zypp/{filename}"},
-          {"pattern": f"^(# +)?{setting} =.*"},
-          {"repl": f"{setting} = {value}"},
+        for dist_repo in dist_repositories:
+          repo_id        = f"repo-{dist_repo}"
+          update_repo_id = f"{repo_id}-update"
+          debug_repo_id  = f"{repo_id}-debug"
+          source_repo_id = f"{repo_id}-source"
+          update_dir     = update_basedir
+
+          if dist_repo == "non-oss":
+            update_dir     = f"{update_basedir}-{dist_repo}"
+          self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/{distro_basedir}/repo/{dist_repo}/")
+          self.repository_config(state_name=update_repo_id, repo_id=update_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/update/{update_dir}/")
+
+          if 'oss' == dist_repo and self.enable_debug:
+            self.repository_config(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/debug/{distro_basedir}/repo/{dist_repo}/")
+          else:
+            self.absent_repository_config(state_name=debug_repo_id, repo_id=debug_repo_id)
+
+          if 'oss' == dist_repo and self.enable_source:
+            self.repository_config(state_name=source_repo_id, repo_id=source_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
+          else:
+            self.absent_repository_config(state_name=source_repo_id, repo_id=source_repo_id)
+
+      case 'SLES':
+        products_enable_debug     = __salt__['pillar.get']('zypp:products_enable_debug', False)
+        products_enable_backports = __salt__['pillar.get']('zypp:products_enable_backports', False)
+
+        if self.always_use_obs_instance:
+          self.baseurl = f"{self.baseurl}/ibs"
+
+        osrelease_info = __salt__['grains.get']('osrelease_info', 0)
+        osmajorrelease = __salt__['grains.get']('osmajorrelease', 0)
+        osarch         = __salt__['grains.get']('osarch')
+
+        if len(osrelease_info) > 1:
+          product_release =     f"{osrelease_info[0]}-SP{osrelease_info[1]}"
+          repo_name       = f"SLE_{osrelease_info[0]}_SP{osrelease_info[1]}"
+        else:
+          product_release =     f"{osrelease_info[0]}"
+          repo_name       = f"SLE_{osrelease_info[0]}"
+
+        match __salt__['grains.get']('osmajorrelease', 0):
+          case 16:
+            if products_enable_backports:
+              repo_id =  "Packagehub"
+              self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/SUSE/Backports/SLE-{product_release}_{grains.osarch}/standard/")
+          case 15:
+            repo_types = [ 'Product', 'Update' ]
+            for product_name in __salt__['grains.get'](f"zypp:products:{osmajorrelease}", []):
+              for repo_type in repo_types:
+                do_refresh = repo_type == "Update"
+                repo_id = f"{product_name}-{repo_type}"
+                self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}/", refresh=do_refresh)
+                if products_enable_debug:
+                  debug_repo_id = f"{repo_id}_debug"
+                  self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}_debug/", refresh=do_refresh)
+            if products_enable_backports:
+              repo_id =  "Packagehub"
+              self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/SUSE/Backports/SLE-{product_release}_{grains.osarch}/standard/")
+          case _:
+            raise SaltRenderError(f"No handling yet for {__salt__['grains.get']('osfullname')} {__salt__['grains.get']('osmajorrelease', 0)}")
+      case 'Leap':
+        if self.always_use_obs_instance:
+          self.baseurl = f"{self.baseurl}/obs"
+
+        dist_repositories     = ['oss']
+
+        if self.enable_non_oss:
+          dist_repositories.append('non-oss')
+
+        distro_basedir = f"distribution/leap/{__salt__['grains.get']('osrelease')}"
+        update_basedir = f"leap/{__salt__['grains.get']('osrelease')}"
+
+        match __salt__['grains.get']('osmajorrelease', 0):
+          case 16:
+            for dist_repo in dist_repositories:
+              repo_id        = f"repo-{dist_repo}"
+              debug_repo_id  = f"{repo_id}-debug"
+              source_repo_id = f"{repo_id}-source"
+              self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/{distro_basedir}/repo/{dist_repo}/")
+
+              if dist_repo in ["oss", "non-oss"] and self.enable_debug:
+                self.repository_config(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=debug_repo_id, repo_url=f"{self.baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=False)
+              else:
+                self.absent_repository_config(state_name=debug_repo_id, repo_id=debug_repo_id)
+
+              if dist_repo == "oss" and self.enable_source:
+                self.repository_config(state_name=source_repo_id, repo_id=source_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
+              else:
+                self.absent_repository_config(state_name=source_repo_id, repo_id=source_repo_id)
+          case 15:
+            dist_only_has_updates = ['backports', 'sle']
+            dist_repositories.extend(dist_only_has_updates)
+
+            for dist_repo in dist_repositories:
+              repo_id        = f"repo-{dist_repo}"
+              update_repo_id = f"{repo_id}-update"
+              debug_repo_id  = f"{repo_id}-debug"
+              debug_update_repo_id = f"{repo_id}-update-debug"
+              source_repo_id = f"{repo_id}-source"
+              update_dir     = update_basedir
+
+              if dist_repo == "non-oss":
+                update_dir     = f"{update_basedir}-{dist_repo}"
+
+              if not(dist_repo in dist_only_has_updates):
+                self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/{distro_basedir}/repo/{dist_repo}/", refresh=False)
+              self.repository_config(state_name=update_repo_id, repo_id=update_repo_id, repo_name=update_repo_id, repo_url=f"{self.baseurl}/update/{update_dir}/{dist_repo}/")
+
+              if dist_repo in ["oss", "non-oss"] and self.enable_debug:
+                self.repository_config(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=debug_repo_id, repo_url=f"{self.baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=False)
+              else:
+                self.absent_repository_config(state_name=debug_repo_id, repo_id=debug_repo_id)
+
+              if dist_repo != 'sle' and self.enable_debug:
+                self.repository_config(state_name=debug_update_repo_id, repo_id=debug_update_repo_id, repo_name=debug_update_repo_id, repo_url=f"{self.baseurl}/update/{update_dir}/{dist_repo}_debug/")
+              else:
+                self.absent_repository_config(state_name=debug_update_repo_id, repo_id=debug_update_repo_id)
+
+              if dist_repo in ["oss", "non-oss"] and self.enable_source:
+                self.repository_config(state_name=source_repo_id, repo_id=source_repo_id, repo_name=repo_id, repo_url=f"{self.baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
+              else:
+                self.absent_repository_config(state_name=source_repo_id, repo_id=source_repo_id)
+          case _:
+            raise SaltRenderError(f"No handling yet for {__salt__['grains.get']('osfullname')} {__salt__['grains.get']('osmajorrelease', 0)}")
+      case _:
+        raise SaltRenderError(f"No handling yet for {__salt__['grains.get']('osfullname')}")
+
+    if self.enable_openh264:
+      repo_id = "repo-openh264"
+      project_name = "Open H.264 Codec"
+      codecs_baseurl = "https://codecs.opensuse.org/openh264"
+      codecs_url = None
+
+      if 'openSUSE Tumbleweed' == __salt__['grains.get']('osfullname'):
+        codecs_url = f"{codecs_baseurl}/openSUSE_Tumbleweed"
+
+      elif __salt__['grains.get']('osfullname') in ["Leap", "SLES" ]:
+        if __salt__['grains.get']('osmajorrelease', 0) >= 16:
+          codecs_url = f"{codecs_baseurl}/openSUSE_Leap_16"
+        else:
+          codecs_url = f"{codecs_baseurl}/openSUSE_Leap"
+
+      if codecs_url:
+
+        self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=project_name, repo_url=codecs_url)
+
+    for obs_instance, repositories_list in __salt__['pillar.get']('zypp:repositories',{}).items():
+      if self.always_use_obs_instance:
+        self.baseurl = f"{self.baseurl}/{obs_instance}"
+
+      if "obs" == obs_instance:
+        self.baseurl = f"{self.baseurl}/repositories"
+
+      for repo_id, project_name in repositories_list.items():
+
+        cleaned_repo_id = repo_id.replace(':','_')
+
+
+        project_name_for_url = project_name.replace(':', ':/')
+        repo_base_url        = f"{self.baseurl}/{project_name_for_url}/"
+        repo_url             = __salt__['zypp_helper.guess_repository'](repo_base_url)
+        self.repository_config(state_name=cleaned_repo_id, repo_id=repo_id, repo_name=project_name, repo_url=repo_url)
+
+    for repo_id, repodata in __salt__['pillar.get']('zypp:isv',{}).items():
+      self.repository_config(state_name=repo_id, repo_id=repo_id, repo_name=repodata['name'],
+        repo_url=repodata['baseurl'],
+        refresh=repodata.get('refresh', True),
+        gpgcheck=repodata.get('gpgcheck', 1),
+        gpgkey=repodata.get('gpgkey', None)
+      )
+
+    if self.purge_untracked:
+      repos_on_system = [f.replace('.repo', '') for f in os.listdir("/etc/zypp/repos.d")]
+      bad_repositories = [r for r in repos_on_system if not(r in self.repo_tracker.values())]
+      for repo in bad_repositories:
+        repo_id = f"zypp_purge_repo_{repo}"
+        self.absent_repository_config(state_name=repo_id, repo_id=repo, additional_fields=[{'require_in': list(self.repo_tracker.keys())}])
+
+    locked_packages = __salt__['pillar.get']('zypp:locks',[])
+    if len(locked_packages) > 0:
+      config_section = "zypp_lock_pkgs"
+      repository_states.append(config_section)
+
+      self.config[config_section] = {
+        "pkg.held": [
+          {'replace': True},
+          {'pkgs': locked_packages }
         ]
       }
 
-  # TODO: do distros here
-
-  match __salt__['grains.get']('osfullname'):
-    case 'openSUSE Tumbleweed':
-      if always_use_obs_instance:
-        baseurl = f"{baseurl}/obs"
-
-      dist_repositories     = ['oss']
-      dist_only_has_updates = []
-
-      if enable_non_oss:
-        dist_repositories.append('non-oss')
-
-      distro_basedir = 'tumbleweed'
-      update_basedir = 'tumbleweed'
-      update_for_baserepo = True
-
-      for dist_repo in dist_repositories:
-        repo_id        = f"repo-{dist_repo}"
-        update_repo_id = f"{repo_id}-update"
-        debug_repo_id  = f"{repo_id}-debug"
-        source_repo_id = f"{repo_id}-source"
-        update_dir     = update_basedir
-
-        if dist_repo == "non-oss":
-          update_dir     = f"{update_basedir}-{dist_repo}"
-
-        repo_tracker[repo_id] = repo_id
-        config[repo_id] = repository_config(repo_id, repo_id, f"{baseurl}/{distro_basedir}/repo/{dist_repo}/", refresh=True, gpgcheck=1)
-
-        repo_tracker[update_repo_id] = update_repo_id
-        config[update_repo_id] = repository_config(update_repo_id, repo_id, f"{baseurl}/update/{update_dir}/", refresh=True, gpgcheck=1)
-
-        if 'oss' == dist_repo and enable_debug:
-          repo_tracker[debug_repo_id] = debug_repo_id
-          config[debug_repo_id] = repository_config(debug_repo_id, repo_id, f"{baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=True, gpgcheck=1)
-        else:
-          config[debug_repo_id] = absent_repository_config(debug_repo_id)
-
-        if 'oss' == dist_repo and enable_source:
-          repo_tracker[source_repo_id] = source_repo_id
-          config[source_repo_id] = repository_config(source_repo_id, repo_id, f"{baseurl}/source/{distro_basedir}/repo/{dist_repo}/", refresh=True, gpgcheck=1)
-        else:
-          config[source_repo_id] = absent_repository_config(source_repo_id)
-
-    case 'SLES':
-      products_enable_debug     = __salt__['pillar.get']('zypp:products_enable_debug', False)
-      products_enable_backports = __salt__['pillar.get']('zypp:products_enable_backports', False)
-
-      if always_use_obs_instance:
-        baseurl = f"{baseurl}/ibs"
-
-      osrelease_info = __salt__['grains.get']('osrelease_info', 0)
-      osmajorrelease = __salt__['grains.get']('osmajorrelease', 0)
-      osarch         = __salt__['grains.get']('osarch')
-
-      if len(osrelease_info) > 1:
-        product_release =     f"{osrelease_info[0]}-SP{osrelease_info[1]}"
-        repo_name       = f"SLE_{osrelease_info[0]}_SP{osrelease_info[1]}"
-      else:
-        product_release =     f"{osrelease_info[0]}"
-        repo_name       = f"SLE_{osrelease_info[0]}"
-
-      match __salt__['grains.get']('osmajorrelease', 0):
-        case 15:
-          repo_types = [ 'Product', 'Update' ]
-          for product_name in __salt__['grains.get'](f"zypp:products:{osmajorrelease}", []):
-            for repo_type in repo_types:
-              do_refresh = repo_type == "Update"
-              repo_id = f"{product_name}-{repo_type}"
-              repo_tracker[repo_id] = repo_id
-              config[repo_id] = repository_config(repo_id, repo_id, f"{baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}/", refresh=do_refresh, gpgcheck=1)
-              if products_enable_debug:
-                debug_repo_id = f"{repo_id}_debug"
-                repo_tracker[debug_repo_id] = debug_repo_id
-                 # noqa: 204
-                config[repo_id] = repository_config(repo_id, repo_id, f"{baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}_debug/", refresh=do_refresh, gpgcheck=1)
-          if products_enable_backports:
-            repo_id =  "Packagehub"
-            repo_tracker[repo_id] = repo_id
-            config[repo_id] = repository_config(repo_id, repo_id, f"{baseurl}/SUSE/Backports/SLE-{product_release}_{grains.osarch}/standard/", refresh=True, gpgcheck=1)
-        case _:
-          raise SaltRenderError(f"No handling yet for {__salt__['grains.get']('osfullname')} {__salt__['grains.get']('osmajorrelease', 0)}")
-    case 'Leap':
-      if always_use_obs_instance:
-        baseurl = f"{baseurl}/obs"
-
-      dist_repositories     = ['oss']
-
-      if enable_non_oss:
-        dist_repositories.append('non-oss')
-
-      distro_basedir = f"distribution/leap/{__salt__['grains.get']('osrelease')}"
-      update_basedir = f"leap/{__salt__['grains.get']('osrelease')}"
-
-      match __salt__['grains.get']('osmajorrelease', 0):
-        case 16:
-          for dist_repo in dist_repositories:
-            repo_id        = f"repo-{dist_repo}"
-            debug_repo_id  = f"{repo_id}-debug"
-            source_repo_id = f"{repo_id}-source"
-
-            repo_tracker[repo_id] = repo_id
-            config[repo_id] = repository_config(repo_id, repo_id, f"{baseurl}/{distro_basedir}/repo/{dist_repo}/", refresh=True, gpgcheck=1)
-
-            if dist_repo in ["oss", "non-oss"] and enable_debug:
-              repo_tracker[debug_repo_id] = debug_repo_id
-              config[debug_repo_id] = repository_config(debug_repo_id, debug_repo_id, f"{baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=False, gpgcheck=1)
-            else:
-              config[debug_repo_id] = absent_repository_config(debug_repo_id)
-
-            if dist_repo == "oss" and enable_source:
-              repo_tracker[source_repo_id] = source_repo_id
-              config[source_repo_id] = repository_config(source_repo_id, repo_id, f"{baseurl}/source/{distro_basedir}/repo/{dist_repo}/", refresh=True, gpgcheck=1)
-            else:
-              config[source_repo_id] = absent_repository_config(source_repo_id)
-        case 15:
-          dist_only_has_updates = ['backports', 'sle']
-          dist_repositories.extend(dist_only_has_updates)
-
-          for dist_repo in dist_repositories:
-            repo_id        = f"repo-{dist_repo}"
-            update_repo_id = f"{repo_id}-update"
-            debug_repo_id  = f"{repo_id}-debug"
-            debug_update_repo_id = f"{repo_id}-update-debug"
-            source_repo_id = f"{repo_id}-source"
-            update_dir     = update_basedir
-
-            if dist_repo == "non-oss":
-              update_dir     = f"{update_basedir}-{dist_repo}"
-
-            if not(dist_repo in dist_only_has_updates):
-              repo_tracker[repo_id] = repo_id
-              config[repo_id] = repository_config(repo_id, repo_id, f"{baseurl}/{distro_basedir}/repo/{dist_repo}/", refresh=False, gpgcheck=1)
-
-            repo_tracker[update_repo_id] = update_repo_id
-            config[update_repo_id] = repository_config(update_repo_id, update_repo_id, f"{baseurl}/update/{update_dir}/{dist_repo}/", refresh=True, gpgcheck=1)
-
-            if dist_repo in ["oss", "non-oss"] and enable_debug:
-              repo_tracker[debug_repo_id] = debug_repo_id
-              config[debug_repo_id] = repository_config(debug_repo_id, debug_repo_id, f"{baseurl}/debug/{distro_basedir}/repo/{dist_repo}/", refresh=False, gpgcheck=1)
-            else:
-              config[debug_repo_id] = absent_repository_config(debug_repo_id)
-
-            if dist_repo != 'sle' and enable_debug:
-              repo_tracker[debug_update_repo_id] = debug_update_repo_id
-              config[debug_update_repo_id] = repository_config(debug_update_repo_id, debug_update_repo_id, f"{baseurl}/update/{update_dir}/{dist_repo}_debug/", refresh=True, gpgcheck=1)
-            else:
-              config[debug_update_repo_id] = absent_repository_config(debug_update_repo_id)
-
-            if dist_repo in ["oss", "non-oss"] and enable_source:
-              repo_tracker[source_repo_id] = source_repo_id
-              config[source_repo_id] = repository_config(source_repo_id, repo_id, f"{baseurl}/source/{distro_basedir}/repo/{dist_repo}/", refresh=True, gpgcheck=1)
-            else:
-              config[source_repo_id] = absent_repository_config(source_repo_id)
-        case _:
-          raise SaltRenderError(f"No handling yet for {__salt__['grains.get']('osfullname')} {__salt__['grains.get']('osmajorrelease', 0)}")
-    case _:
-      raise SaltRenderError(f"No handling yet for {__salt__['grains.get']('osfullname')}")
-
-  if __salt__["pillar.get"]("zypp:products_enable_openh264", True):
-    repo_id = "repo-openh264"
-    project_name = "Open H.264 Codec"
-    codecs_baseurl = "https://codecs.opensuse.org/openh264"
-    codecs_url = None
-
-    if 'openSUSE Tumbleweed' == __salt__['grains.get']('osfullname'):
-      codecs_url = f"{codecs_baseurl}/openSUSE_Tumbleweed"
-
-    elif __salt__['grains.get']('osfullname') in ["Leap", "SLES" ]:
-      if __salt__['grains.get']('osmajorrelease', 0) >= 16:
-        codecs_url = f"{codecs_baseurl}/openSUSE_Leap_16"
-      else:
-        codecs_url = f"{codecs_baseurl}/openSUSE_Leap"
-
-    if codecs_url:
-      repo_tracker[repo_id] = repo_id
-
-      config[repo_id] = repository_config(repo_id, project_name, codecs_url, refresh=True, gpgcheck=1)
-
-  for obs_instance, repositories_list in __salt__['pillar.get']('zypp:repositories',{}).items():
-    if always_use_obs_instance:
-      baseurl = f"{baseurl}/{obs_instance}"
-
-    if "obs" == obs_instance:
-      baseurl = f"{baseurl}/repositories"
-
-    for repo_id, project_name in repositories_list.items():
-
-      cleaned_repo_id = repo_id.replace(':','_')
-      repo_tracker[repo_id] = cleaned_repo_id
-
-      project_name_for_url = project_name.replace(':', ':/')
-      repo_base_url        = f"{baseurl}/{project_name_for_url}/"
-      repo_url             = __salt__['zypp_helper.guess_repository'](repo_base_url)
-
-      config[cleaned_repo_id] = repository_config(repo_id, project_name, repo_url, refresh=True, gpgcheck=1)
-
-  for repo_id, repodata in __salt__['pillar.get']('zypp:isv',{}).items():
-    repo_tracker[repo_id] = repo_id
-    config[repo_id] = repository_config(
-      repo_id, repodata['name'], repodata['baseurl'],
-      refresh=repodata.get('refresh', True),
-      gpgcheck=repodata.get('gpgcheck', 1),
-      gpgkey=repodata.get('gpgkey', None)
-    )
-
-  if purge_untracked:
-    repos_on_system = [f.replace('.repo', '') for f in os.listdir("/etc/zypp/repos.d")]
-    bad_repositories = [r for r in repos_on_system if not(r in repo_tracker.keys())]
-    for repo in bad_repositories:
-      repo_id = f"zypp_purge_repo_{repo}"
-      config[repo_id] = absent_repository_config(repo)
-      config[repo_id]["pkgrepo.absent"].append({'require_in': list(repo_tracker.values())})
-
-  locked_packages = __salt__['pillar.get']('zypp:locks',[])
-  if len(locked_packages) > 0:
-    config_section = "zypp_lock_pkgs"
-    repository_states.append(config_section)
-
-    config[config_section] = {
-      "pkg.held": [
-        {'replace': True},
-        {'pkgs': locked_packages }
+    refresh_deps = list(self.repo_tracker.keys())
+    self.config["zypper_refresh"] = {
+      "cmd.run": [
+        {'name': f"/usr/bin/zypper --non-interactive --gpg-auto-import-keys ref {' '.join(self.repo_tracker.values())}"},
+        {'onchanges': refresh_deps},
+        {'require':   refresh_deps},
       ]
     }
 
-  config["zypper_refresh"] = {
-    "cmd.run": [
-      {'name': f"/usr/bin/zypper --non-interactive --gpg-auto-import-keys ref {' '.join(repo_tracker.keys())}"},
-      {'onchanges': list(repo_tracker.values())},
-      {'require':   list(repo_tracker.values())},
-    ]
-  }
+    check_zypper_filename = ['/etc/monitoring-plugins/check_zypper-ignores.txt', '/etc/nagios/check_zypper-ignores.txt']
+    if 'check_zypper' in __salt__['pillar.get']('zypp', {}):
+      self.config["monitoring_check_zypper_dirs"] = {
+        "file.directory": [
+          {'user':  'root'},
+          {'group': 'root'},
+          {'mode':  '0755'},
+          {'names': [os.path.dirname(f) for f in check_zypper_filename]},
+        ]
+      }
 
-  check_zypper_filename = ['/etc/monitoring-plugins/check_zypper-ignores.txt', '/etc/nagios/check_zypper-ignores.txt']
-  if 'check_zypper' in __salt__['pillar.get']('zypp', {}):
-    config["monitoring_check_zypper_dirs"] = {
-      "file.directory": [
-        {'user':  'root'},
-        {'group': 'root'},
-        {'mode':  '0755'},
-        {'names': [os.path.dirname(f) for f in check_zypper_filename]},
+      check_zypper_template = [{'source': 'salt://profile-base/files/etc/monitoring-plugins/check_zypper-ignores.txt.j2'}]
+
+      self.config["zypper_check_ignores"] = {
+        'file.managed': [
+          {'user': 'root'},
+          {'group': 'root'},
+          {'mode':  '0644'},
+          {'template': 'jinja'},
+          {'require': ["monitoring_check_zypper_dirs"]},
+          {'names': [{f: check_zypper_template} for f in check_zypper_filename]},
+        ]
+      }
+    else:
+      for filename in check_zypper_filename:
+        self.config[filename] = { "file.absent": []}
+
+      for dirname in [os.path.dirname(f) for f in check_zypper_filename]:
+        self.config[dirname] = {"file.absent": []}
+
+
+  def repository_config(self, state_name, repo_id, repo_name, repo_url, refresh=True, gpgcheck=True, gpgkey=None):
+    if gpgkey is None:
+      gpgkey = __salt__['zypp_helper.repomd_key_url'](repo_url)
+
+    ret = {
+      "pkgrepo.managed": [
+        {'name':      repo_id},
+        {'humanname': repo_name},
+        {'self.baseurl':   repo_url},
+        {'enabled':   True},
+        {'gpgcheck':  1},
+        {'refresh':   True},
       ]
     }
 
-    check_zypper_template = [{'source': 'salt://profile-base/files/etc/monitoring-plugins/check_zypper-ignores.txt.j2'}]
+    if gpgkey:
+      ret["pkgrepo.managed"].append({'gpgkey': gpgkey})
 
-    config["zypper_check_ignores"] = {
-      'file.managed': [
-        {'user': 'root'},
-        {'group': 'root'},
-        {'mode':  '0644'},
-        {'template': 'jinja'},
-        {'require': ["monitoring_check_zypper_dirs"]},
-        {'names': [{f: check_zypper_template} for f in check_zypper_filename]},
+    self.repo_tracker[state_name] = repo_id
+    self.config[state_name] = ret
+
+  def absent_repository_config(self, state_name, repo_id, additional_fields=[]):
+    fields = [
+        {"name": repo_id}
       ]
-    }
-  else:
-    for filename in check_zypper_filename:
-      config[filename] = { "file.absent": []}
+    fields.extend(additional_fields)
 
-    for dirname in [os.path.dirname(f) for f in check_zypper_filename]:
-      config[dirname] = {"file.absent": []}
+    self.config[state_name] = ret = {"pkgrepo.absent": fields }
 
-  return config
+def run():
+  return ZyppConfigurator().config
