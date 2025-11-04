@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-{%- set is_container = grains.virtual in ["LXC", "container"] %}
+{%- set is_container = grains.virtual in ["LXC", "container", "systemd-nspawn"] %}
 include:
   - .zypp
   - .timezone
@@ -56,7 +56,9 @@ include:
   - .dehydrated
   - .apparmor-local-overrides
   - .etckeeper
+{%- if not(is_container) %}
   - .nsswitch
+{%- endif %}
   - .sssd
   - .salt-config
   - .apache
