@@ -124,11 +124,43 @@ def run():
           config[source_repo_id] = absent_repository_config(source_repo_id)
 
     case 'SLES':
+      products_enable_debug     = __salt__['pillar.get']('zypp:products_enable_debug', False)
+      products_enable_backports = __salt__['pillar.get']('zypp:products_enable_backports', False)
+
+      if always_use_obs_instance:
+        baseurl = f"{baseurl}/ibs"
+
+      osrelease_info = __salt__['grains.get']('osrelease_info', 0)
+      osmajorrelease = __salt__['grains.get']('osmajorrelease', 0)
+      osarch         = __salt__['grains.get']('osarch')
+
+      if len(osrelease_info) > 1:
+        product_release =     f"{osrelease_info[0]}-SP{osrelease_info[1]}"
+        repo_name       = f"SLE_{osrelease_info[0]}_SP{osrelease_info[1]}"
+      else:
+        product_release =     f"{osrelease_info[0]}"
+        repo_name       = f"SLE_{osrelease_info[0]}"
+
       match __salt__['grains.get']('osmajorrelease', 0):
-        case 16:
-          log.info("do slfo here")
+        # case 16:
+        #   log.info("do slfo here")
         case 15:
-          log.info("do old leap here")
+          repo_types = [ 'Product', 'Update' ]
+          for product_name in __salt__['grains.get'](f"zypp:products:{osmajorrelease}", []):
+            for repo_type in repo_types:
+              do_refresh = repo_type == "Update"
+              repo_id = f"{product_name}-{repo_type}"
+              repo_tracker[repo_id] = repo_id
+              config[repo_id] = repository_config(repo_id, repo_id, f"{baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}/", refresh=do_refresh, gpgcheck=1)
+              if products_enable_debug:
+                debug_repo_id = f"{repo_id}_debug"
+                repo_tracker[debug_repo_id] = debug_repo_id
+                 # noqa: 204
+                config[repo_id] = repository_config(repo_id, repo_id, f"{baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}_debug/", refresh=do_refresh, gpgcheck=1)
+          if products_enable_backports:
+            repo_id =  "Packagehub"
+            repo_tracker[repo_id] = repo_id
+            config[repo_id] = repository_config(repo_id, repo_id, f"{baseurl}/SUSE/Backports/SLE-{product_release}_{grains.osarch}/standard/", refresh=True, gpgcheck=1)
         case _:
           raise SaltRenderError(f"No handling yet for {__salt__['grains.get']('osfullname')} {__salt__['grains.get']('osmajorrelease', 0)}")
     case 'Leap':
