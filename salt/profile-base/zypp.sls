@@ -302,26 +302,26 @@ class ZyppConfigurator:
         self.config[dirname] = {"file.absent": []}
 
 
-  def configure_repository(self, state_name, repo_id, repo_name, repo_url, refresh=True, gpgcheck=True, gpgkey=None):
+  def configure_repository(self, state_name, repo_id, repo_name, repo_url, refresh=True, gpgcheck=True, gpgkey=None, additional_fields=[]):
     if gpgkey is None:
       gpgkey = __salt__['zypp_helper.repomd_key_url'](repo_url)
 
-    ret = {
-      "pkgrepo.managed": [
-        {'name':      repo_id},
-        {'humanname': repo_name},
-        {'self.baseurl':   repo_url},
-        {'enabled':   True},
-        {'gpgcheck':  1},
-        {'refresh':   True},
-      ]
-    }
+    ret = [
+      {'name':      repo_id},
+      {'humanname': repo_name},
+      {'self.baseurl':   repo_url},
+      {'enabled':   True},
+      {'gpgcheck':  1},
+      {'refresh':   True},
+    ]
 
     if gpgkey:
-      ret["pkgrepo.managed"].append({'gpgkey': gpgkey})
+      ret.append({'gpgkey': gpgkey})
+
+    ret.extend(additional_fields)
 
     self.repo_tracker[state_name] = repo_id
-    self.config[state_name] = ret
+    self.config[state_name] = {"pkgrepo.managed": ret}
 
   def purge_repository(self, state_name, repo_id, additional_fields=[]):
     fields = [
