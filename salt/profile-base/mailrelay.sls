@@ -19,13 +19,12 @@
 
 {%- from 'profile-base/helpers/ssh_config_helper.sls' import ssh_handle_boolean  %}
 
+{%- if 'mail' in pillar and 'relay' in pillar.mail %}
+
 postfix_package:
   pkg.installed:
     - names:
       - postfix
-
-{%- set changed_settings = [] %}
-{%- if 'mail' in pillar %}
 
 {%- if "myhostname" in pillar.mail %}
 {%- set myhostname = pillar.mail.myhostname %}
@@ -185,8 +184,6 @@ run_newaliases:
     - onchanges:
       - file: /etc/aliases
 {%- endif %}
-{%- endif %}
-
 
 postfix_service:
   service.running:
@@ -199,3 +196,16 @@ postfix_service:
     - name: /usr/sbin/config.postfix
     - require:
       - postfix_package
+{%- else %}
+postfix_service:
+  service.dead:
+    - name: postfix
+    - enable: False
+
+postfix_package:
+  pkg.purged:
+    - pkgs:
+      - postfix
+    - require:
+      - postfix_service
+{%- endif %}
