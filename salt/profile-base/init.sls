@@ -22,46 +22,46 @@ include:
   - .zypp
   - .timezone
   - .locale
-  - .wicked-network
   - .hosts-file
-  - .resolvconf
 {%- if not(is_container) %}
+  - .wicked-network
+  - .resolvconf
   - .grub
   - .auditd
   - .sysctl
   - .chrony
   - .udev-rules
   - .mounts
-{%- endif %}
   - .systemd-coredump
-  - .systemd-settings
-  - .systemd-overrides
   - .systemd-socket-redirector
+  - .systemd-settings
+{%- endif %}
+  - .systemd-overrides
   - .sysconfig
   - .screen
   - .tmux
   - .mailrelay
+{%- if not(is_container) %}
   - .rsyslog
   - .issue-generator
-{%- if not(is_container) %}
   - .monitoring
-{%- endif %}
-  - .rsync
   - .cron
   - .logrotate
+  - .rsync
   - .ssh
   - .ssh-root-authorized-keys
   - .ethtool
   - .ipsets
   - .dehydrated
   - .apparmor-local-overrides
-  - .etckeeper
-{%- if not(is_container) %}
   - .nsswitch
-{%- endif %}
   - .sssd
+{%- endif %}
+  - .etckeeper
   - .salt-config
-  - .apache
   - .resticprofile
+{%- if not(is_container) %}
+  - .apache
   - .flatpak
   - .nfs-exports
+{%- endif %}
