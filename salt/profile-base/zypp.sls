@@ -368,8 +368,8 @@ class ZyppConfigurator:
       {'humanname': repo_name},
       {'baseurl':   repo_url},
       {'enabled':   True},
-      {'gpgcheck':  1},
-      {'refresh':   True},
+      {'gpgcheck':  gpgcheck},
+      {'refresh':   refresh},
     ]
 
     if gpgkey:
