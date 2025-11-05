@@ -311,7 +311,6 @@ class ZyppConfigurator:
     locked_packages = __salt__['pillar.get']('zypp:locks',[])
     if len(locked_packages) > 0:
       config_section = "zypp_lock_pkgs"
-      repository_states.append(config_section)
 
       self.config[config_section] = {
         "pkg.held": [
