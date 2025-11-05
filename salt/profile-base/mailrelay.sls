@@ -52,68 +52,108 @@ postfix_package:
 {%- endif %}
 
 {%- if 'relay' in pillar.mail %}
-{%- do changed_settings.append("postfix_sysconfig_relayhost") %}
 postfix_sysconfig_relayhost:
   file.replace:
     - name: /etc/sysconfig/postfix
+    - require:
+      - postfix_package
+    - require_in:
+      - postfix_service
+    - onchanges_in:
+      - postfix_service
     - pattern: POSTFIX_RELAYHOST=".*"
     - repl: POSTFIX_RELAYHOST="[{{ pillar.mail.relay }}]"
 {%- endif %}
 
-{%- do changed_settings.append("postfix_sysconfig_myhostname") %}
 postfix_sysconfig_myhostname:
   file.replace:
     - name: /etc/sysconfig/postfix
+    - require:
+      - postfix_package
+    - require_in:
+      - postfix_service
+    - onchanges_in:
+      - postfix_service
     - pattern: POSTFIX_MYHOSTNAME=".*"
     - repl: POSTFIX_MYHOSTNAME="{{ myhostname }}"
     - append_if_not_found: True
 
 {%- if 'masquerade_domain' in pillar.mail %}
-{%- do changed_settings.append("postfix_sysconfig_masquerade_domain") %}
 postfix_sysconfig_masquerade_domain:
   file.replace:
     - name: /etc/sysconfig/postfix
+    - require:
+      - postfix_package
+    - require_in:
+      - postfix_service
+    - onchanges_in:
+      - postfix_service
     - pattern: POSTFIX_MASQUERADE_DOMAIN=".*"
     - repl: POSTFIX_MASQUERADE_DOMAIN="{{ pillar.mail.masquerade_domain }}"
 {%- endif %}
 
-{%- do changed_settings.append("postfix_sysconfig_masquerade_exceptions") %}
 postfix_sysconfig_masquerade_exceptions:
   file.replace:
     - name: /etc/sysconfig/postfix
+    - require:
+      - postfix_package
+    - require_in:
+      - postfix_service
+    - onchanges_in:
+      - postfix_service
     - pattern: POSTFIX_ADD_MASQUERADE_EXCEPTIONS=".*"
     - repl: POSTFIX_ADD_MASQUERADE_EXCEPTIONS=""
     - append_if_not_found: True
 
-{%- do changed_settings.append("postfix_sysconfig_mynetworks") %}
 postfix_sysconfig_mynetworks:
   file.replace:
     - name: /etc/sysconfig/postfix
+    - require:
+      - postfix_package
+    - require_in:
+      - postfix_service
+    - onchanges_in:
+      - postfix_service
     - pattern: POSTFIX_ADD_MYNETWORKS_STYLE=".*"
     - repl: POSTFIX_ADD_MYNETWORKS_STYLE="{{ mynetworks_style }}"
     - append_if_not_found: True
 
 {%- if "smtp_bind_address" in pillar.mail %}
-{%- do changed_settings.append("postfix_sysconfig_bind_adress") %}
 postfix_sysconfig_bind_adress:
   file.replace:
     - name: /etc/sysconfig/postfix
+    - require:
+      - postfix_package
+    - require_in:
+      - postfix_service
+    - onchanges_in:
+      - postfix_service
     - pattern: POSTFIX_ADD_SMTP_BIND_ADDRESS=".*"
     - repl: POSTFIX_ADD_SMTP_BIND_ADDRESS="{{ pillar.mail.smtp_bind_address }}"
     - append_if_not_found: True
 {%- endif %}
 
-{%- do changed_settings.append("postfix_sysconfig_mail_from_header") %}
 postfix_sysconfig_mail_from_header:
   file.replace:
     - name: /etc/sysconfig/mail
+    - require:
+      - postfix_package
+    - require_in:
+      - postfix_service
+    - onchanges_in:
+      - postfix_service
     - pattern: FROM_HEADER=".*"
     - repl: FROM_HEADER="{{ from_header }}"
 
-{%- do changed_settings.append("postfix_sysconfig_mail_listen_remote") %}
 postfix_sysconfig_mail_listen_remote:
   file.replace:
     - name: /etc/sysconfig/mail
+    - require:
+      - postfix_package
+    - require_in:
+      - postfix_service
+    - onchanges_in:
+      - postfix_service
     - pattern: SMTPD_LISTEN_REMOTE=".*"
     - repl: SMTPD_LISTEN_REMOTE="{{ listen_remote }}"
 
@@ -122,6 +162,12 @@ postfix_sysconfig_mail_listen_remote:
 mail_aliases_{{ alias }}:
   file.replace:
     - name: /etc/aliases
+    - require:
+      - postfix_package
+    - require_in:
+      - postfix_service
+    - onchanges_in:
+      - postfix_service
     - pattern: "^{{ alias }}:.*"
     - repl: "{{ alias }}: {{ target }}"
     - append_if_not_found: True
@@ -130,6 +176,12 @@ mail_aliases_{{ alias }}:
 run_newaliases:
   cmd.run:
     - name: /usr/bin/newaliases
+    - require:
+      - postfix_package
+    - require_in:
+      - postfix_service
+    - onchanges_in:
+      - postfix_service
     - onchanges:
       - file: /etc/aliases
 {%- endif %}
@@ -143,25 +195,7 @@ postfix_service:
     - reload: True
     - require:
       - postfix_package
-      {%- if changed_settings|length > 0 %}
-      {%- for changed_setting in changed_settings %}
-      - {{ changed_setting }}
-      {%- endfor %}
-    - onchanges:
-      {%- for changed_setting in changed_settings %}
-      - {{ changed_setting }}
-      {%- endfor %}
-      {%- endif %}
   cmd.run:
     - name: /usr/sbin/config.postfix
     - require:
       - postfix_package
-      {%- if changed_settings|length > 0 %}
-      {%- for changed_setting in changed_settings %}
-      - {{ changed_setting }}
-      {%- endfor %}
-    - onchanges:
-      {%- for changed_setting in changed_settings %}
-      - {{ changed_setting }}
-      {%- endfor %}
-      {%- endif %}
