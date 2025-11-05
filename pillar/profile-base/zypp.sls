@@ -31,6 +31,8 @@ zypp:
 {%- if grains.osfullname == "SLES" %}
   products_enable_debug: false
   products:
+    16:
+      - SLE-Product-SLES
     15:
       - SLE-Product-SLES
       - SLE-Module-Basesystem
