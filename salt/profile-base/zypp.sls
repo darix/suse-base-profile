@@ -117,9 +117,11 @@ class ZyppConfigurator:
           product_release =     f"{osrelease_info[0]}"
           repo_name       = f"SLE_{osrelease_info[0]}"
 
+
+
         match __salt__['grains.get']('osmajorrelease', 0):
           case 16:
-            for product_name in __salt__['grains.get'](f"zypp:products:{osmajorrelease}", []):
+            for product_name in __salt__['grains.get'](f"zypp:products:{osmajorrelease}", ["SLE-Product-SLES"]):
               repo_baseurl = f"{baseurl}/SUSE/Products/{product_name}/{osrelease}/{osarch}/product"
               self.configure_repository(state_name=product_name, repo_id=product_name, repo_name=product_name, repo_url=f"{repo_baseurl}/")
 
@@ -154,7 +156,7 @@ class ZyppConfigurator:
                 self.configure_repository(state_name=packagehub_source_repo_id, repo_id=packagehub_source_repo_id, repo_name=packagehub_source_repo_id, repo_url=f"{packagehub_repo_baseurl}_source/")
           case 15:
             repo_types = [ 'Product', 'Update' ]
-            for product_name in __salt__['pillar.get'](f"zypp:products:{osmajorrelease}", []):
+            for product_name in __salt__['pillar.get'](f"zypp:products:{osmajorrelease}", ["SLE-Product-SLES", "SLE-Module-Basesystem"]):
               for repo_type in repo_types:
                 do_refresh = (repo_type == "Update")
                 repo_id = f"{product_name}-{repo_type}"
