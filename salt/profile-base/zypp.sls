@@ -156,9 +156,9 @@ class ZyppConfigurator:
                 self.configure_repository(state_name=packagehub_source_repo_id, repo_id=packagehub_source_repo_id, repo_name=packagehub_source_repo_id, repo_url=f"{packagehub_repo_baseurl}_source/")
           case 15:
             repo_types = [ 'Product', 'Update' ]
-            for product_name in __salt__['grains.get'](f"zypp:products:{osmajorrelease}", []):
+            for product_name in __salt__['pillar.get'](f"zypp:products:{osmajorrelease}", []):
               for repo_type in repo_types:
-                do_refresh = repo_type == "Update"
+                do_refresh = (repo_type == "Update")
                 repo_id = f"{product_name}-{repo_type}"
                 self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}/", refresh=do_refresh)
                 if products_enable_debug:
