@@ -18,8 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# TODO:
-# - on leap 16 we need `zypper removeservice openSUSE`
 
 from salt.exceptions import SaltRenderError
 import os
