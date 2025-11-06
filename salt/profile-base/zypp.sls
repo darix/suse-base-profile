@@ -126,10 +126,10 @@ class ZyppConfigurator:
               self.configure_repository(state_name=product_name, repo_id=product_name, repo_name=product_name, repo_url=f"{repo_baseurl}/")
 
               if self.enable_debug:
-                debug_repo_id = f"{repo_id}-debug"
+                debug_repo_id = f"{product_name}-debug"
                 self.configure_repository(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=debug_repo_id, repo_url=f"{repo_baseurl}_debug/")
               if self.enable_source:
-                source_repo_id = f"{repo_id}-source"
+                source_repo_id = f"{product_name}-source"
                 self.configure_repository(state_name=source_repo_id, repo_id=source_repo_id, repo_name=source_repo_id, repo_url=f"{repo_baseurl}_source/")
 
             if products_enable_backports:
