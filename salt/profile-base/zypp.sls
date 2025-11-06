@@ -296,7 +296,7 @@ class ZyppConfigurator:
       for service in all_services:
         self.config[f"zypper_disable_services_{service}"] = {
           "cmd.run": [
-            {"name": f"/usr/bin/zypper modifyservice --disable {' '.join(all_services)}"},
+            {"name": f"/usr/bin/zypper modifyservice --disable {service}"},
             {'require_in': list(self.repo_tracker.keys())},
             {'require': ["zypper_remove_service_package"]}
           ]
