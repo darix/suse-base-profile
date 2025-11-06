@@ -293,13 +293,14 @@ class ZyppConfigurator:
 
     all_services = [f.replace('.service', '') for f in os.listdir("/etc/zypp/services.d")]
     if len(all_services) > 0:
-      self.config["zypper_disable_services"] = {
-        "cmd.run": [
-          {"name": f"/usr/bin/zypper modifyservice --disable {' '.join(all_services)}"},
-          {'require_in': list(self.repo_tracker.keys())},
-          {'require': ["zypper_remove_service_package"]}
-        ]
-      }
+      for service in all_services:
+        self.config[f"zypper_disable_services_{service}"] = {
+          "cmd.run": [
+            {"name": f"/usr/bin/zypper modifyservice --disable {' '.join(all_services)}"},
+            {'require_in': list(self.repo_tracker.keys())},
+            {'require': ["zypper_remove_service_package"]}
+          ]
+        }
 
     base_service_package = f"openSUSE-repos-{__salt__['grains.get']('osfullname')}"
     self.config["zypper_remove_service_package"] = {
