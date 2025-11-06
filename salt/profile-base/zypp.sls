@@ -125,10 +125,10 @@ class ZyppConfigurator:
               repo_baseurl = f"{baseurl}/SUSE/Products/{product_name}/{osrelease}/{osarch}/product"
               self.configure_repository(state_name=product_name, repo_id=product_name, repo_name=product_name, repo_url=f"{repo_baseurl}/")
 
-              if enable_debug:
+              if self.enable_debug:
                 debug_repo_id = f"{repo_id}-debug"
                 self.configure_repository(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=debug_repo_id, repo_url=f"{repo_baseurl}_debug/")
-              if enable_source:
+              if self.enable_source:
                 source_repo_id = f"{repo_id}-source"
                 self.configure_repository(state_name=source_repo_id, repo_id=source_repo_id, repo_name=source_repo_id, repo_url=f"{repo_baseurl}_source/")
 
@@ -141,14 +141,14 @@ class ZyppConfigurator:
               packagehub_repo_baseurl = f"{baseurl}/SUSE/Products/PackageHub/{osrelease}/{osarch}/product"
               self.configure_repository(state_name=packageup_repo_id, repo_id=packageup_repo_id, repo_name=packageup_repo_id, repo_url=f"{packagehub_repo_baseurl}/")
 
-              if enable_debug:
+              if self.enable_debug:
                 backports_debug_repo_id = f"{backports_repo_id}-debug"
                 self.configure_repository(state_name=backports_debug_repo_id, repo_id=backports_debug_repo_id, repo_name=backports_debug_repo_id, repo_url=f"{backports_repo_baseurl}_debug/")
 
                 packagehub_debug_repo_id = f"{packagehub_repo_id}-debug"
                 self.configure_repository(state_name=packagehub_debug_repo_id, repo_id=packagehub_debug_repo_id, repo_name=packagehub_debug_repo_id, repo_url=f"{packagehub_repo_baseurl}_debug/")
 
-              if enable_source:
+              if self.enable_source:
                 backport_source_repo_id = f"{backports_repo_id}-source"
                 self.configure_repository(state_name=backport_source_repo_id, repo_id=backport_source_repo_id, repo_name=backport_source_repo_id, repo_url=f"{backports_repo_baseurl}_source/")
 
