@@ -137,9 +137,9 @@ class ZyppConfigurator:
               backports_repo_baseurl = f"{baseurl}/SUSE/Backports/SLE-{osrelease}_{osarch}/standard"
               self.configure_repository(state_name=backports_repo_id, repo_id=backports_repo_id, repo_name=backports_repo_id, repo_url=f"{backports_repo_baseurl}/")
 
-              packageup_repo_id = "PackageHub"
+              packagehub_repo_id = "PackageHub"
               packagehub_repo_baseurl = f"{baseurl}/SUSE/Products/PackageHub/{osrelease}/{osarch}/product"
-              self.configure_repository(state_name=packageup_repo_id, repo_id=packageup_repo_id, repo_name=packageup_repo_id, repo_url=f"{packagehub_repo_baseurl}/")
+              self.configure_repository(state_name=packagehub_repo_id, repo_id=packagehub_repo_id, repo_name=packagehub_repo_id, repo_url=f"{packagehub_repo_baseurl}/")
 
               if self.enable_debug:
                 backports_debug_repo_id = f"{backports_repo_id}-debug"
