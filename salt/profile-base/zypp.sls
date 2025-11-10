@@ -277,8 +277,12 @@ class ZyppConfigurator:
         self.configure_repository(state_name=cleaned_repo_id, repo_id=repo_id, repo_name=project_name, repo_url=repo_url)
 
     for repo_id, repodata in __salt__['pillar.get']('zypp:isv',{}).items():
+      repourl = repodata['baseurl']
+      if repodata.get("guess_repository", False):
+        repourl = self.guess_repository(repourl)
+
       self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repodata['name'],
-        repo_url=repodata['baseurl'],
+        repo_url=repourl,
         refresh=repodata.get('refresh', True),
         gpgcheck=repodata.get('gpgcheck', 1),
         gpgkey=repodata.get('gpgkey', None)
