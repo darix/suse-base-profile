@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+{%- if grains.osrelease_info[0] == 15 %}
 {%- set passwd_modules   = ["compat"] %}
 {%- set group_modules    = ["compat"] %}
 {%- set shadow_modules   = ["compat"] %}
@@ -42,13 +43,17 @@
 {%- if 'sssd' in pillar and 'netgroup' in pillar.sssd and pillar.sssd.netgroup %}
 {%- do netgroup_modules.append("sss") %}
 {%- else %}
+{%- if pillar.get("use_nis", False) %}
 {%- do netgroup_modules.append("nis") %}
+{%- endif %}
 {%- endif %}
 
 {%- if 'sssd' in pillar and 'autofs' in pillar.sssd and pillar.sssd.autofs %}
 {%- do autofs_modules.append("sss") %}
 {%- else %}
+{%- if pillar.get("use_nis", False) %}
 {%- do autofs_modules.append("nis") %}
+{%- endif %}
 {%- endif %}
 
 {%- if (grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
@@ -107,4 +112,5 @@ nsswitch_automount:
 {%- if (grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
     - require:
       - nsswitch_copy_to_etc
+{%- endif %}
 {%- endif %}
