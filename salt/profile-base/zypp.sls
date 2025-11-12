@@ -35,10 +35,11 @@ class ZyppConfigurator:
     self.baseurl                 = __salt__['pillar.get']('zypp:baseurl', f"https://download.{__salt__['grains.get']('domain')}")
     self.always_use_obs_instance = __salt__['pillar.get']('zypp:always_use_obs_instance', False)
     self.enable_non_oss          = __salt__['pillar.get']('zypp:enable_non_oss', False)
-    self.enable_debug            = __salt__['pillar.get']('zypp:enable_debug', False)
+    self.enable_debug            = __salt__['pillar.get']('zypp:enable_debug', False) or __salt__['pillar.get']('zypp:products_enable_debug', False)
     self.enable_source           = __salt__['pillar.get']('zypp:enable_source', False)
     self.purge_untracked         = __salt__['pillar.get']('zypp:purge_untracked_repositories', True)
-    self.enable_openh264         = __salt__["pillar.get"]("zypp:products_enable_openh264", False)
+    self.enable_openh264         = __salt__["pillar.get"]("zypp:enable_openh264", False)  or __salt__["pillar.get"]("zypp:products_enable_openh264", False)
+    self.enable_backports        = __salt__['pillar.get']('zypp:enable_backports', False) or __salt__['pillar.get']('zypp:products_enable_backports', False)
 
     for filename, file_settings in __salt__["pillar.get"]("zypp:config", {}).items():
       cleaned_filename = filename.replace('.', '_')
@@ -97,9 +98,6 @@ class ZyppConfigurator:
 
 
       case 'SLES':
-        products_enable_debug     = __salt__['pillar.get']('zypp:products_enable_debug', False)
-        products_enable_backports = __salt__['pillar.get']('zypp:products_enable_backports', False)
-
         if self.always_use_obs_instance:
           baseurl = f"{self.baseurl}/ibs"
         else:
@@ -132,7 +130,7 @@ class ZyppConfigurator:
                 source_repo_id = f"{product_name}-source"
                 self.configure_repository(state_name=source_repo_id, repo_id=source_repo_id, repo_name=source_repo_id, repo_url=f"{repo_baseurl}_source/")
 
-            if products_enable_backports:
+            if self.enable_backports:
               backports_repo_id =  "Backports"
               backports_repo_baseurl = f"{baseurl}/SUSE/Backports/SLE-{osrelease}_{osarch}/standard"
               self.configure_repository(state_name=backports_repo_id, repo_id=backports_repo_id, repo_name=backports_repo_id, repo_url=f"{backports_repo_baseurl}/")
@@ -161,10 +159,10 @@ class ZyppConfigurator:
                 do_refresh = (repo_type == "Update")
                 repo_id = f"{product_name}-{repo_type}"
                 self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}/", refresh=do_refresh)
-                if products_enable_debug:
+                if self.enable_debug:
                   debug_repo_id = f"{repo_id}_debug"
                   self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}_debug/", refresh=do_refresh)
-            if products_enable_backports:
+            if self.enable_backports:
               repo_id =  "Packagehub"
               self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{baseurl}/SUSE/Backports/SLE-{product_release}_{grains.osarch}/standard/")
           case _:
