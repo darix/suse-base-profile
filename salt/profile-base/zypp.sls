@@ -393,6 +393,7 @@ class ZyppConfigurator:
     self.config[state_name] = ret = {"pkgrepo.absent": fields }
 
   def repomd_key_url(self, baseurl):
+    try:
       if not(baseurl.endswith('/')):
           baseurl = f"{baseurl}/"
       repomd_key_path = 'repodata/repomd.xml.key'
@@ -401,6 +402,8 @@ class ZyppConfigurator:
       log.info(f"Querying {repomd_url} resulted in {result.status_code}")
       if result.status_code in [200, 302, 301]:
           return repomd_url
+    except requests.exceptions.InvalidSchema:
+      return None
 
   def guess_repository(self, baseurl):
       repository_list = []
