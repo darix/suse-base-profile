@@ -164,7 +164,7 @@ class ZyppConfigurator:
                   self.configure_repository(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=debug_repo_id, repo_url=f"{baseurl}/SUSE/{repo_type}s/{product_name}/{product_release}/{osarch}/{repo_type.lower()}_debug/", refresh=do_refresh)
             if self.enable_backports:
               repo_id =  "Packagehub"
-              self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{baseurl}/SUSE/Backports/SLE-{product_release}_{grains.osarch}/standard/")
+              self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{baseurl}/SUSE/Backports/SLE-{product_release}_{osarch}/standard/")
           case _:
             raise SaltRenderError(f"No handling yet for {__salt__['grains.get']('osfullname')} {__salt__['grains.get']('osmajorrelease', 0)}")
 
