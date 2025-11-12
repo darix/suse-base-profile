@@ -258,11 +258,12 @@ class ZyppConfigurator:
         self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=project_name, repo_url=codecs_url)
 
     for obs_instance, repositories_list in __salt__['pillar.get']('zypp:repositories',{}).items():
+      repo_baseurl = self.baseurl
       if self.always_use_obs_instance:
-        self.baseurl = f"{self.baseurl}/{obs_instance}"
+        repo_baseurl = f"{repo_baseurl}/{obs_instance}"
 
       if "obs" == obs_instance:
-        self.baseurl = f"{self.baseurl}/repositories"
+        repo_baseurl = f"{repo_baseurl}/repositories"
 
       for repo_id, project_name in repositories_list.items():
 
@@ -270,7 +271,7 @@ class ZyppConfigurator:
 
 
         project_name_for_url = project_name.replace(':', ':/')
-        repo_base_url        = f"{self.baseurl}/{project_name_for_url}/"
+        repo_base_url        = f"{repo_baseurl}/{project_name_for_url}/"
         repo_url             = self.guess_repository(repo_base_url)
         self.configure_repository(state_name=cleaned_repo_id, repo_id=repo_id, repo_name=project_name, repo_url=repo_url)
 
