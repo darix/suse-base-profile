@@ -17,6 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+restore_default_sysctl:
+  file.managed:
+    - name: /etc/sysctl.conf
+    - mode: '0644'
+    - user: root
+    - group: root
+    - onlyif: test -e /etc/sysctl.conf
+    - source: salt://{{ slspath }}/files/etc/sysctl.conf
 
 {%- if "sysctl" in pillar %}
 {%- set items = [] %}
@@ -25,6 +33,8 @@
 {{ key }}:
    sysctl.present:
      - value: {{ value }}
+     - require:
+       - restore_default_sysctl
 {%- endfor %}
 
 run_sysctl:
