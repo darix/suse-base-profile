@@ -53,6 +53,11 @@ apache2_deploy_files:
     - config:
         pillar_prefix: 'configs'
         pillar_path:   'etc:apache2'
+        affected_states:
+          require_in:
+            - apache2_service
+          onchanges_in:
+            - apache2_service
 {%- endif %}
 
 apache2_service:
@@ -63,12 +68,6 @@ apache2_service:
     - require:
       - apache2_packages
       - file: /etc/sysconfig/apache2
-      {%- if has_filetree %}
-      - apache2_deploy_files
-      {%- endif %}
     - onchanges:
       - file: /etc/sysconfig/apache2
-      {%- if has_filetree %}
-      - apache2_deploy_files
-      {%- endif %}
 {%- endif %}

@@ -31,6 +31,11 @@
 #         file_mode:     640           # optional: default: 644
 #         user:          root          # optional: default: root
 #         group:         haproxy       # optional: default: root
+#         affected_states:
+#           require_in:
+#             - haproxy_service
+#           onchanges_in:
+#             - haproxy_service
 #     - overrides:                     # optional: allows overriding dir_mode, file_mode, user, group
 #         {%- for filename in ['/etc/haproxy/certlist-gen', '/etc/haproxy/verify-ssl'] %}
 #         {{ filename }}:
@@ -54,6 +59,9 @@ class FileTreeDeploy:
         self.default_group     = self.config.get('group',     'root')
 
         self.overrides         = section_data.get('overrides', dict())
+
+        self.require_in        = section_data.get('affected_states', {}).get('require_in', [])
+        self.onchanges_in      = section_data.get('affected_states', {}).get('onchanges_in', [])
 
         if self.pillar_prefix == None or self.pillar_path == None:
             raise ValueError("pillar_prefix and pillar_path can not be empty")
@@ -93,7 +101,9 @@ class FileTreeDeploy:
             mode            = file_mode,
             user            = user,
             group           = group,
-            contents_pillar = pillar_path
+            contents_pillar = pillar_path,
+            require_in      = self.require_in,
+            onchanges_in    = self.onchanges_in
         )
         self.update_return_data(target_path, ret)
 
