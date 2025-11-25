@@ -60,8 +60,8 @@ class FileTreeDeploy:
 
         self.overrides         = section_data.get('overrides', dict())
 
-        self.require_in        = section_data.get('affected_states', {}).get('require_in', [])
-        self.onchanges_in      = section_data.get('affected_states', {}).get('onchanges_in', [])
+        self.require_in        = self.config.get('affected_states', {}).get('require_in', [])
+        self.onchanges_in      = self.config.get('affected_states', {}).get('onchanges_in', [])
 
         if self.pillar_prefix == None or self.pillar_path == None:
             raise ValueError("pillar_prefix and pillar_path can not be empty")
