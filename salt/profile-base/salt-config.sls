@@ -24,7 +24,6 @@ salt_master_additional_packages:
       - acl
       - gopass
       - gopass-impersonate-pass
-      - nsca-ng-client
 
 master_drop_in:
   file.managed:
@@ -61,6 +60,11 @@ force_deploy_service_{{ minion_id | regex_replace('\.-', '_') }}:
 {%- endif %}
 
 {%- if 'nsca_ng' in pillar and 'client' in pillar.nsca_ng and 'config' in pillar.nsca_ng.client %}
+salt_master_nsca_packages:
+  pkg.installed:
+    - names:
+      - nsca-ng-client
+
 {%- set send_nsca_config = '/etc/send_nsca.cfg' %}
 send_nsca_config:
   file.managed:
