@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-{%- if grains.osrelease_info[0] > 12 %}
+{%- if not(grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) and grains.osrelease_info[0] > 12 %}
   issue_generator_package:
     pkg.installed:
       - names:
