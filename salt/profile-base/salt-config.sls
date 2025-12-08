@@ -22,7 +22,8 @@ salt_master_additional_packages:
   pkg.installed:
     - names:
       - acl
-      - password-store
+      - gopass
+      - gopass-impersonate-pass
       - nsca-ng-client
 
 master_drop_in:
