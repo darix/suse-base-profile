@@ -197,6 +197,7 @@ postfix_service:
     - require:
       - postfix_package
 {%- else %}
+{%- if not("postfix" in pillar)%}
 postfix_service:
   service.dead:
     - name: postfix
@@ -208,4 +209,5 @@ postfix_package:
       - postfix
     - require:
       - postfix_service
+{%- endif %}
 {%- endif %}
