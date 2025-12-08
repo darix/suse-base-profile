@@ -196,18 +196,18 @@ postfix_service:
     - name: /usr/sbin/config.postfix
     - require:
       - postfix_package
-{%- else %}
-{%- if not("postfix" in pillar)%}
-postfix_service:
-  service.dead:
-    - name: postfix
-    - enable: False
+# {%- else %}
+# {%- if not("postfix" in pillar)%}
+# postfix_service:
+#   service.dead:
+#     - name: postfix
+#     - enable: False
 
-postfix_package:
-  pkg.purged:
-    - pkgs:
-      - postfix
-    - require:
-      - postfix_service
-{%- endif %}
+# postfix_package:
+#   pkg.purged:
+#     - pkgs:
+#       - postfix
+#     - require:
+#       - postfix_service
+# {%- endif %}
 {%- endif %}
