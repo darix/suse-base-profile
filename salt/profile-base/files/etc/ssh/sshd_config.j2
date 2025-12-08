@@ -10,11 +10,6 @@
 
 # This sshd was compiled with PATH=/usr/bin:/bin:/usr/sbin:/sbin
 
-# To modify the system-wide sshd configuration, create a "*.conf" file under
-# "/etc/ssh/sshd_config.d/" which will be automatically included below.
-# Don't edit this configuration file itself if possible to avoid update
-# problems.
-Include /etc/ssh/sshd_config.d/*.conf
 
 # The strategy used for options in the default sshd_config shipped with
 # OpenSSH is to specify options with their default value where
@@ -22,6 +17,12 @@ Include /etc/ssh/sshd_config.d/*.conf
 # default value.
 {%- if (grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
 Include /usr/etc/ssh/sshd_config.d/*.conf
+{%- else %}
+# To modify the system-wide sshd configuration, create a "*.conf" file under
+# "/etc/ssh/sshd_config.d/" which will be automatically included below.
+# Don't edit this configuration file itself if possible to avoid update
+# problems.
+Include /etc/ssh/sshd_config.d/*.conf
 {%- endif %}
 
 #Port 22
