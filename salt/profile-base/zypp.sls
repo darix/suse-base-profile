@@ -32,6 +32,10 @@ class ZyppConfigurator:
 
     self.repo_tracker = {}
 
+    self.ports_architectures = {
+      'aarch64':'aarch64',
+    }
+
     self.baseurl                 = __salt__['pillar.get']('zypp:baseurl', f"https://download.{__salt__['grains.get']('domain')}")
     self.always_use_obs_instance = __salt__['pillar.get']('zypp:always_use_obs_instance', False)
     self.enable_non_oss          = __salt__['pillar.get']('zypp:enable_non_oss', False)
@@ -63,6 +67,10 @@ class ZyppConfigurator:
           baseurl = f"{self.baseurl}/obs"
         else:
           baseurl = self.baseurl
+
+        mapped_target_arch = self.ports_architectures.get(__salt__['grains.get']('cpuarch'))
+        if mapped_target_arch is not None:
+          baseurl = f"{baseurl}/ports/{mapped_target_arch}"
 
         dist_repositories     = ['oss']
         dist_only_has_updates = []
