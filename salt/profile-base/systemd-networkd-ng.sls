@@ -17,6 +17,80 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
+# udev:
+#   net:
+#     porta23: de:ad:be:01
+#     porta24: de:ad:be:02
+
+# network:
+#   type: sn2
+#   # normally you would have an include with those to share them
+#   default_gateways:
+#     br_ipv4:
+#        ipv4: 10.10.10.254
+#     br_mixed:
+#        ipv4: 10.11.11.254
+#        ipv6: fc00::11:ffff
+#     br_ipv6:
+#        ipv6: fc00::12:ffff
+#   interfaces:
+#     # all devices with an explicite Kind are assumed to be Kind: ether
+#     porta23:
+#       bonded_to: bond0
+#     porta24:
+#       network_options:
+#         Network:
+#            Bond: bond0
+#     # bond and bridge devices resolve their mac address automatically to the underlying first bound interface
+#     bond0:
+#       Kind: bond
+#       network_options:
+#         Network:
+#           VLAN:
+#             - vl_ipv4
+#             - vl_mixed
+#             - vl_ipv6
+#     vl_ipv4:
+#       Kind: vlan
+#       netdev_options:
+#         VLAN:
+#           Id: 1004
+#       network_options:
+#         Network:
+#            Bridge: br_ipv4
+#     vl_ipv4:
+#       Kind: vlan
+#       bridged_to: br_ipv6
+#       netdev_options:
+#         VLAN:
+#           Id: 1006
+#     vl_mixed:
+#       Kind: vlan
+#       bridged_to: br_mixed
+#       netdev_options:
+#         VLAN:
+#           Id: 1010
+#     br_ipv4:
+#       Kind: bridge
+#       ipv4_addr:
+#         - 10.10.10.1
+#     br_ipv6:
+#       Kind: bridge
+#       ipv6_addr:
+#         - fc00::12:1
+#     br_mixed:
+#       global_default_route: True
+#       Kind: bridge
+#       ipv6_addr:
+#         - fc00::11:1
+#       ipv4_addr:
+#         - 10.11.11.1
+#     porta25:
+#       mac_address: de:ad:be:03
+#       ipv4_addr:
+#         - 10.12.12.1
+
 from salt._compat import ipaddress
 import re
 import os
