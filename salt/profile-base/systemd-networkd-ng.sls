@@ -387,10 +387,10 @@ class NetworkdDeviceConfigs:
                         'Address': addresses,
                     }
 
-                    if 0 == pillar.get('sysctl:net.ipv6.conf.default.accept_ra', 1) or 0 == pillar.get('sysctl:net.ipv6.conf.all.accept_ra', 1):
+                    if (0 == __salt__['pillar.get']('sysctl:net.ipv6.conf.default.accept_ra', 1)) or (0 == __salt__['pillar.get']('sysctl:net.ipv6.conf.all.accept_ra', 1)):
                         network_file_data['Network']['IPv6AcceptRA'] = 'no'
 
-                    if 0 == pillar.get('sysctl:net.ipv6.conf.default.autoconf', 1) or 0 == pillar.get('sysctl:net.ipv6.conf.all.autoconf', 1):
+                    if (0 == __salt__['pillar.get']('sysctl:net.ipv6.conf.default.autoconf', 1)) or (0 == __salt__['pillar.get']('sysctl:net.ipv6.conf.all.autoconf', 1)):
                         network_file_data['Network']['LinkLocalAddressing'] = 'no'
 
                     if self.needs_rule_based_routing:
