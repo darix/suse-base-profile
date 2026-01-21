@@ -405,8 +405,6 @@ class NetworkdDeviceConfigs:
                             network_file_data["Route"].append({
                                     'Destination': network_range,
                                     'Table': tablename,
-                                    'Scope': 'link',
-                                    'Table': tablename,
                                 }
                             )
 
