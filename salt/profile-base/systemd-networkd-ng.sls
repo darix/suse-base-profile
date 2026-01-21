@@ -278,7 +278,7 @@ class NetworkdDeviceConfigs:
 
         if 'networkd-ng' == __salt__['pillar.get']('network:type', ''):
 
-            self.udev_net_pillar   = __salt__['pillar.get']("udev:net")
+            self.udev_net_pillar   = __salt__['pillar.get']("udev:net", {})
             self.interfaces_pillar = __salt__['pillar.get']('network:interfaces', {})
             self.unit_requires.append(networkd_packages_state)
             self.unit_requires_in.append(networkd_service_state)
@@ -324,7 +324,7 @@ class NetworkdDeviceConfigs:
                             }
                         }
                         if mac_address is not None:
-                            netdev_file_data['NetDev']['MacAddress'] = mac_address
+                            netdev_file_data['NetDev']['MACAddress'] = mac_address
 
                         netdev_file_data = deepmerge(netdev_file_data, interface_data.get('netdev_options', {}))
 
@@ -338,7 +338,7 @@ class NetworkdDeviceConfigs:
                             },
                         }
                         if mac_address is not None:
-                            netdev_file_data['NetDev']['MacAddress'] = mac_address
+                            netdev_file_data['NetDev']['MACAddress'] = mac_address
                         netdev_file_data = deepmerge(netdev_file_data, interface_data.get('netdev_options', {}))
 
                     case _:
@@ -346,7 +346,7 @@ class NetworkdDeviceConfigs:
                         link_file_data = {
                             'Match': {
                                 'Kind': 'ether',
-                                'MacAddress': mac_address,
+                                'MACAddress': mac_address,
                             },
                             'Link': {
                                 'Name': interface_name,
