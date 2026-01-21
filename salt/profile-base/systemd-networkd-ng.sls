@@ -141,6 +141,7 @@ class NetworkdDeviceConfigs:
         self.unit_requires_in  = []
         self.unit_onchanges_in = []
 
+        self.rt_tables = []
         self.rt_tables_defaults_list = [
                 """
 #
@@ -389,7 +390,7 @@ class NetworkdDeviceConfigs:
                         network_file_data["RoutingPolicyRule"] = []
                         network_file_data["Route"] = []
 
-                        self.rt_tables.append(table_name)
+                        self.rt_tables.append(tablename)
 
                         for address in addresses:
                             ip_interface = ipaddress.ip_interface(address)
@@ -449,8 +450,6 @@ class NetworkdDeviceConfigs:
                 rt_tables_networkd_list.append(f"{table}:{table_index}")
                 table_index += 1
 
-            reload_deps.append("rt_tables")
-
             self.config["rt_tables_dir"] = {
                 "file.directory": [
                     {"name": "/etc/iproute2/"},
@@ -467,17 +466,20 @@ class NetworkdDeviceConfigs:
                     {"group": "root"},
                     {"mode": "0640"},
                     {"require": ["rt_tables_dir"]},
+                    {"require_in": [networkd_service_state]},
+                    {"onchanges_in": [networkd_service_state]},
                     {"contents": "\n".join(rt_tables_list)},
                 ]
             }
-            reload_deps.append("networkd_conf_snippet_file")
-            rt_tables_networkd_value = render_dict_to_ini_string({'Network': {'RouteTable': " ".join(rt_tables_list)}})
+            rt_tables_networkd_value = render_dict_to_ini_string({'Network': {'RouteTable': " ".join(rt_tables_networkd_list)}})
             self.config["networkd_conf_snippet_file"] = {
                 "file.managed": [
                     {'name': '/etc/systemd/networkd.conf.d/routing_tables.conf'},
                     {'user': 'root'},
                     {'group': 'root'},
                     {'mode': '0644'},
+                    {"require_in": [networkd_service_state]},
+                    {"onchanges_in": [networkd_service_state]},
                     {'contents': rt_tables_networkd_value},
                 ]
             }
