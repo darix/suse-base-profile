@@ -141,6 +141,23 @@ class NetworkdDeviceConfigs:
         self.unit_requires_in  = []
         self.unit_onchanges_in = []
 
+        self.rt_tables_defaults_list = [
+                """
+#
+# reserved values
+#
+255	local
+254	main
+253	default
+0	unspec
+#
+# local
+#
+#1	inr.ruhep
+#
+"""
+            ]
+
     def ifcfg_section(self, interface_name):
         return f"ifcfg_{interface_name}"
 
@@ -371,6 +388,9 @@ class NetworkdDeviceConfigs:
                     if self.needs_rule_based_routing:
                         network_file_data["RoutingPolicyRule"] = []
                         network_file_data["Route"] = []
+
+                        self.rt_tables.append(table_name)
+
                         for address in addresses:
                             ip_interface = ipaddress.ip_interface(address)
                             address_without_netmask = ip_interface.ip.__str__()
@@ -419,6 +439,48 @@ class NetworkdDeviceConfigs:
 
             for interface_name in current_devices:
                 self.purge_all_units_for_interface(interface_name)
+
+            table_index = 1
+            rt_tables_list = self.rt_tables_defaults_list
+            rt_tables_networkd_list = []
+
+            for table in self.rt_tables:
+                rt_tables_list.append(f"{table_index} {table}")
+                rt_tables_networkd_list.append(f"{table}:{table_index}")
+                table_index += 1
+
+            reload_deps.append("rt_tables")
+
+            self.config["rt_tables_dir"] = {
+                "file.directory": [
+                    {"name": "/etc/iproute2/"},
+                    {"user": "root"},
+                    {"group": "root"},
+                    {"mode": "0755"},
+                ]
+            }
+
+            self.config["rt_tables"] = {
+                "file.managed": [
+                    {"name": "/etc/iproute2/rt_tables"},
+                    {"user": "root"},
+                    {"group": "root"},
+                    {"mode": "0640"},
+                    {"require": ["rt_tables_dir"]},
+                    {"contents": "\n".join(rt_tables_list)},
+                ]
+            }
+            reload_deps.append("networkd_conf_snippet_file")
+            rt_tables_networkd_value = render_dict_to_ini_string({'Network': {'RouteTable': " ".join(rt_tables_list)}})
+            self.config["networkd_conf_snippet_file"] = {
+                "file.managed": [
+                    {'name': '/etc/systemd/networkd.conf.d/routing_tables.conf'},
+                    {'user': 'root'},
+                    {'group': 'root'},
+                    {'mode': '0644'},
+                    {'contents': rt_tables_networkd_value},
+                ]
+            }
 
             self.config[networkd_packages_state] = {
                 'pkg.installed': [
