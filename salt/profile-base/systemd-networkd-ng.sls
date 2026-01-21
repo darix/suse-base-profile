@@ -342,7 +342,7 @@ class NetworkdDeviceConfigs:
                         netdev_file_data = deepmerge(netdev_file_data, interface_data.get('netdev_options', {}))
 
                     case _:
-                        mac_address = __salt__['pillar.get'](f'udev:net:{interface_name}')
+                        mac_address = __salt__['pillar.get'](f'udev:net:{interface_name}', interface_data.get('mac_address'))
                         link_file_data = {
                             'Match': {
                                 'Kind': 'ether',
