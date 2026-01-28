@@ -24,7 +24,7 @@ include:
   - .locale
   - .hosts-file
 {%- if not(is_container) %}
-  - .systemd-network-ng
+  - .systemd-networkd-ng
   - .wicked-network
   - .resolvconf
   - .grub
