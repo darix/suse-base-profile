@@ -496,17 +496,24 @@ class NetworkdDeviceConfigs:
             }
             for network_service in ['NetworkManager', 'wicked', 'wickedd']:
                 self.config[f"disable_{network_service}"] = {
+                    'service.disabled': [
+                        {'name': network_service},
+                        {'require': self.unit_requires},
+                        {'require_in': self.unit_requires_in}
+                    ]
+                }
+                self.config[f"kill_{network_service}"] = {
                     'service.dead': [
                         {'name': network_service},
-                        {'enable', False},
-                        {'require_in': [networkd_service_state]}
+                        {'require': self.unit_requires},
+                        {'require_in': self.unit_requires_in}
                     ]
                 }
             self.config[networkd_service_state] = {
-                # 'service.enabled': [
-                #     {'name': 'systemd-networkd'},
-                #     {'enable': True},
-                # ],
+                'service.running': [
+                    {'name': 'systemd-networkd'},
+                    {'enable': True},
+                ],
                 'cmd.run': [
                     {'name': "echo /usr/bin/networkctl reload"},
                 ]
