@@ -519,10 +519,10 @@ class NetworkdDeviceConfigs:
                 ]
             }
 
-        else:
-            for interface_name in __salt__['pillar.get']('network:interfaces', {}).keys():
-                self.purge_all_units_for_interface(interface_name)
-
+#       else:
+#           for interface_name in __salt__['pillar.get']('network:interfaces', {}).keys():
+#               self.purge_all_units_for_interface(interface_name)
+#
             # self.config[networkd_service_state] = {
             #     'service.dead': [
             #         {'name': 'systemd-networkd'},
