@@ -44,9 +44,4 @@ run_systemctl_daemon_reload:
       - change_reboot_target
     - onchanges:
       - change_reboot_target
-
-kexec_tools_packages:
-  pkg.purged:
-    - pkgs:
-      - kexec-tools
 {%- endif %}
