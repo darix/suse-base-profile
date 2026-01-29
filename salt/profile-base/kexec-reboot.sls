@@ -26,4 +26,27 @@ run_systemctl_daemon_reload:
       - change_reboot_target
     - onchanges:
       - change_reboot_target
+{%- else %}
+disable_kexex_load:
+  service.disabled:
+    - name: kexec-load.service
+    - require_in:
+      - kexec_tools_packages
+
+change_reboot_target:
+  file.absent:
+    - name:  /etc/systemd/system/reboot.target
+
+run_systemctl_daemon_reload:
+  cmd.run:
+    - name: /usr/bin/systemctl daemon-reload
+    - require:
+      - change_reboot_target
+    - onchanges:
+      - change_reboot_target
+
+kexec_tools_packages:
+  pkg.purged:
+    - pkgs:
+      - kexec-tools
 {%- endif %}
