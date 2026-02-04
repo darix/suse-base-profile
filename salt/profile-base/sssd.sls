@@ -54,7 +54,7 @@ ldap_config_for_autofs:
     - group: root
     - mode:  0644
     - name: /etc/openldap/ldap.conf
-    - content:
+    - contents:
       - '#'
       - '# LDAP Defaults'
       - '#'
@@ -89,7 +89,7 @@ sssd_service:
       - ldap_config_for_autofs
 
 {%- if 'autofs' in pillar.sssd and pillar.sssd.autofs %}
-sssd_service:
+autofs_service:
   service.running:
     - name: autofs.service
     - enable: True
