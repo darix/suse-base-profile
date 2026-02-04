@@ -50,7 +50,7 @@ sssd_pam_enable:
 
 sssd_service:
   service.running:
-    - name: sssd
+    - name: sssd.service
     - enable: True
     - require:
       - sssd_pam_enable
@@ -59,4 +59,18 @@ sssd_service:
       - sssd_config
     - watch:
       - sssd_config
+
+{%- if 'autofs' in pillar.sssd and pillar.sssd.autofs %}
+sssd_service:
+  service.running:
+    - name: autofs.service
+    - enable: True
+    - require:
+      - sssd_pam_enable
+      - sssd_config
+    - onchanges:
+      - sssd_config
+    - watch:
+      - sssd_config
+{%- endif %}
 {%- endif %}
