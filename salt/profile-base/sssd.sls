@@ -48,6 +48,31 @@ sssd_pam_enable:
     - name: /usr/sbin/pam-config --add --sss
     - unless: "/usr/bin/grep -q 'pam_sss' /etc/pam.d/common-session-pc"
 
+ldap_config_for_autofs:
+  file.managed:
+    - user: root
+    - group: root
+    - mode:  0644
+    - name: /etc/openldap/ldap.conf
+    - content:
+      - '#'
+      - '# LDAP Defaults'
+      - '#'
+      - ''
+      - '# See ldap.conf(5) for details'
+      - '# This file should be world readable but not world writable.'
+      - ''
+      - '#BASE   dc=example,dc=com'
+      - '#URI    ldap://ldap.example.com ldap://ldap-master.example.com:666'
+      - ''
+      - '#SIZELIMIT      12'
+      - '#TIMELIMIT      15'
+      - '#DEREF          never'
+      - 'BASE       {{ pillar.sssd.ldap_base }}'
+      - 'URI        {{ pillar.sssd.ldap_url  }}'
+      - 'TLS_CACERT {{ pillar.sssd.ldap_cert }}'
+      - 'TLS_REQCERT hard'
+
 sssd_service:
   service.running:
     - name: sssd.service
@@ -55,10 +80,13 @@ sssd_service:
     - require:
       - sssd_pam_enable
       - sssd_config
+      - ldap_config_for_autofs
     - onchanges:
       - sssd_config
+      - ldap_config_for_autofs
     - watch:
       - sssd_config
+      - ldap_config_for_autofs
 
 {%- if 'autofs' in pillar.sssd and pillar.sssd.autofs %}
 sssd_service:
@@ -68,9 +96,12 @@ sssd_service:
     - require:
       - sssd_pam_enable
       - sssd_config
+      - ldap_config_for_autofs
     - onchanges:
       - sssd_config
+      - ldap_config_for_autofs
     - watch:
       - sssd_config
+      - ldap_config_for_autofs
 {%- endif %}
 {%- endif %}
