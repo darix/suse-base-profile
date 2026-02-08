@@ -367,8 +367,8 @@ class ZyppConfigurator:
       for filename in check_zypper_filename:
         self.config[filename] = { "file.absent": []}
 
-      for dirname in [os.path.dirname(f) for f in check_zypper_filename]:
-        self.config[dirname] = {"file.absent": []}
+      #for dirname in [os.path.dirname(f) for f in check_zypper_filename]:
+      #  self.config[dirname] = {"file.absent": []}
 
 
   def configure_repository(self, state_name, repo_id, repo_name, repo_url, refresh=True, gpgcheck=True, gpgkey=None, additional_fields=[]):
