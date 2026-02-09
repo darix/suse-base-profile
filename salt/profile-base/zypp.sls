@@ -46,20 +46,36 @@ class ZyppConfigurator:
     self.enable_backports        = __salt__['pillar.get']('zypp:enable_backports', False) or __salt__['pillar.get']('zypp:products_enable_backports', False)
 
     for filename, file_settings in __salt__["pillar.get"]("zypp:config", {}).items():
-      cleaned_filename = filename.replace('.', '_')
-
-      for setting, value in file_settings.items():
-        cleaned_setting = setting.replace('.', '_')
-
-        config_section = f"{cleaned_filename}_{cleaned_setting}"
-
-        self.config[config_section] = {
-          "file.replace": [
-            {"name": f"/etc/zypp/{filename}"},
-            {"pattern": f"^(# +)?{setting} =.*"},
-            {"repl": f"{setting} = {value}"},
+      uapi_dir = f"/etc/zypp/{filename}.d"
+      if os.path.exists(uapi_dir):
+        uapi_drop_in_file = f"{uapi_dir}/99-salt.conf"
+        cleaned_filename = uapi_drop_in_file.replace('.', '_')
+        dropin_content = "\n".join([f"{setting} = {value}" for setting, value in file_settings.items()])
+        self.config[cleaned_filename] = {
+          "file.managed": [
+            {'name': uapi_drop_in_file},
+            {'user': 'root'},
+            {'group': 'root'},
+            {'mode': '0644'},
+            {'contents': dropin_content}
           ]
         }
+
+      else:
+        cleaned_filename = filename.replace('.', '_')
+
+        for setting, value in file_settings.items():
+          cleaned_setting = setting.replace('.', '_')
+
+          config_section = f"{cleaned_filename}_{cleaned_setting}"
+
+          self.config[config_section] = {
+            "file.replace": [
+              {"name": f"/etc/zypp/{filename}"},
+              {"pattern": f"^(# +)?{setting} =.*"},
+              {"repl": f"{setting} = {value}"},
+            ]
+          }
 
     match __salt__['grains.get']('osfullname'):
       case 'openSUSE Tumbleweed':
