@@ -410,11 +410,10 @@ class ZyppConfigurator:
 
   def purge_repository(self, state_name, repo_id, additional_fields=[]):
     fields = [
-        {"name": repo_id}
+        {"name": f"/etc/zypp/repos.d/{repo_id}.repo" }
       ]
     fields.extend(additional_fields)
-
-    self.config[state_name] = ret = {"pkgrepo.absent": fields }
+    self.config[state_name] = {"file.absent": fields }
 
   def repomd_key_url(self, baseurl):
     try:
