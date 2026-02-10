@@ -351,6 +351,7 @@ class ZyppConfigurator:
     self.config["zypper_refresh"] = {
       "cmd.run": [
         {'name': f"/usr/bin/zypper --non-interactive --gpg-auto-import-keys ref {' '.join(self.repo_tracker.values())}"},
+        {'umask': '022'},
         {'onchanges': refresh_deps},
         {'require':   refresh_deps},
       ]
