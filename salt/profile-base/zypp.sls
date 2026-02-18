@@ -311,7 +311,7 @@ class ZyppConfigurator:
         gpgkey=repodata.get('gpgkey', None)
       )
 
-    if self.purge_untracked and os.path.exist("/etc/zypp/repos.d"):
+    if self.purge_untracked and os.path.exists("/etc/zypp/repos.d"):
       repos_on_system = [f.replace('.repo', '') for f in os.listdir("/etc/zypp/repos.d")]
       bad_repositories = [r for r in repos_on_system if not(r in self.repo_tracker.values())]
       for repo in bad_repositories:
