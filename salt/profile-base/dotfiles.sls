@@ -36,7 +36,7 @@ def run():
         state_name = f'dotfile_{username}_{cleaned_relative_path}'
 
         mode =    dotfiles_pillar.get('filemode', '0640')
-        dirmode = dotfiles_pillar.get('filemode', '0750')
+        dirmode = dotfiles_pillar.get('dirmode', '0750')
 
         state_config = [
             {'name': absolute_path },
