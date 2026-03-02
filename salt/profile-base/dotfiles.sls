@@ -37,14 +37,17 @@ def run():
 
         mode =    dotfiles_pillar.get('filemode', '0640')
         dirmode = dotfiles_pillar.get('filemode', '0750')
+
         state_config = [
             {'name': absolute_path },
+            {'makedirs': True},
           ]
 
         if isinstance(config_data, str):
           state_config.append({'user':     username})
           state_config.append({'group':    primary_group})
           state_config.append({'mode':     mode})
+          state_config.append({'dirmode':  dirmode})
           state_config.append({'contents': config_data})
         elif isinstance(config_data, dict):
           handled_keys = []
@@ -57,18 +60,11 @@ def run():
             state_config.append({'group':    primary_group})
           if not('mode' in handled_keys):
             state_config.append({'mode':     mode})
-          dirmode = config_data.get('dirmode', dirmode)
+          if not('dirmode' in handled_keys):
+            state_config.append({'dirmode':  dirmode})
         else:
           raise SaltConfigurationError(f"Do not know how to handle type {type(config_data)} for config_data")
-        if not(os.path.exists(absolute_dir) and os.path.isdir(absolute_dir)):
-          config[f'{state_name}_dir'] = {
-            'file.directory': [
-              {'name': absolute_dir},
-              {'mode': dirmode},
-              {'user': username},
-              {'require_in': [state_name]},
-            ]
-          }
+
         config[state_name] = { 'file.managed': state_config }
 
   return config
