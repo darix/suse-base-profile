@@ -433,7 +433,7 @@ class ZyppConfigurator:
       log.info(f"Querying {repomd_url} resulted in {result.status_code}")
       if result.status_code in [200, 302, 301]:
           return repomd_url
-    except requests.exceptions.InvalidSchema:
+    except (requests.exceptions.InvalidSchema, requests.exceptions.ConnectionError):
       return None
 
   def guess_repository(self, baseurl):
