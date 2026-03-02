@@ -67,3 +67,4 @@ include:
   - .flatpak
   - .nfs-exports
 {%- endif %}
+  - .dotfiles
