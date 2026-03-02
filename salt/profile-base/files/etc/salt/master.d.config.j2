@@ -1,2 +1,4 @@
+{%- if 'greeting' in pillar %}
 # {{ pillar.greeting }}
+{%- endif %}
 {{ pillar.salt.master | yaml(false) }}
