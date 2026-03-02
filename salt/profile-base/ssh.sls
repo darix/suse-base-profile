@@ -23,7 +23,7 @@ openssh_package:
        - openssh
 
 # TODO: add support for ALP and friends
-{%- if (grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
+{%- if (grains.osfullname in ["openSUSE Tumbleweed", "openSUSE Tumbleweed-Slowroll"]) or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
 {%- set config_path = "/etc/ssh/sshd_config.d/99-salt.conf" %}
 {%- else %}
 {%- set config_path = "/etc/ssh/sshd_config" %}
