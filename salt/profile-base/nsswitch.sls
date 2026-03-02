@@ -25,7 +25,7 @@
 {%- set autofs_modules   = ["files"] %}
 
 # TODO: handle ALP and friends
-{%- if (grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
+{%- if (grains.osfullname in ["openSUSE Tumbleweed", "openSUSE Tumbleweed-Slowroll"]) or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
 {%- do passwd_modules.append("systemd") %}
 {%- do group_modules.append("[SUCCESS=merge] systemd") %}
 {%- endif %}
@@ -56,7 +56,7 @@
 {%- endif %}
 {%- endif %}
 
-{%- if (grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
+{%- if (grains.osfullname in ["openSUSE Tumbleweed", "openSUSE Tumbleweed-Slowroll"]) or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
 nsswitch_copy_to_etc:
   file.copy:
     - name:   /etc/nsswitch.conf
@@ -69,7 +69,7 @@ nsswitch_passwd:
     - name: /etc/nsswitch.conf
     - pattern: '^(passwd:\s+).*?$'
     - repl: '\1{{ passwd_modules| join(" ") }}'
-{%- if (grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
+{%- if (grains.osfullname in ["openSUSE Tumbleweed", "openSUSE Tumbleweed-Slowroll"]) or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
     - require:
       - nsswitch_copy_to_etc
 {%- endif %}
@@ -79,7 +79,7 @@ nsswitch_group:
     - name: /etc/nsswitch.conf
     - pattern: '^(group:\s+).*?$'
     - repl: '\1{{ group_modules| join(" ") }}'
-{%- if (grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
+{%- if (grains.osfullname in ["openSUSE Tumbleweed", "openSUSE Tumbleweed-Slowroll"]) or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
     - require:
       - nsswitch_copy_to_etc
 {%- endif %}
@@ -89,7 +89,7 @@ nsswitch_shadow:
     - name: /etc/nsswitch.conf
     - pattern: '^(shadow:\s+)\.*?$'
     - repl: '\1{{ shadow_modules| join(" ") }}'
-{%- if (grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
+{%- if (grains.osfullname in ["openSUSE Tumbleweed", "openSUSE Tumbleweed-Slowroll"]) or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
     - require:
       - nsswitch_copy_to_etc
 {%- endif %}
@@ -99,7 +99,7 @@ nsswitch_netgroup:
     - name: /etc/nsswitch.conf
     - pattern: '^(netgroup:\s+).*?$'
     - repl: '\1{{ netgroup_modules| join(" ") }}'
-{%- if (grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
+{%- if (grains.osfullname in ["openSUSE Tumbleweed", "openSUSE Tumbleweed-Slowroll"]) or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
     - require:
       - nsswitch_copy_to_etc
 {%- endif %}
@@ -109,7 +109,7 @@ nsswitch_automount:
     - name: /etc/nsswitch.conf
     - pattern: '^(automount:\s+).*?$'
     - repl: '\1{{ autofs_modules| join(" ") }}'
-{%- if (grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
+{%- if (grains.osfullname in ["openSUSE Tumbleweed", "openSUSE Tumbleweed-Slowroll"]) or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
     - require:
       - nsswitch_copy_to_etc
 {%- endif %}

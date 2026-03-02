@@ -15,7 +15,7 @@
 # OpenSSH is to specify options with their default value where
 # possible, but leave them commented.  Uncommented options override the
 # default value.
-{%- if (grains.osfullname == "openSUSE Tumbleweed") or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
+{%- if (grains.osfullname in ["openSUSE Tumbleweed", "openSUSE Tumbleweed-Slowroll"]) or (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
 Include /usr/etc/ssh/sshd_config.d/*.conf
 {%- else %}
 # To modify the system-wide sshd configuration, create a "*.conf" file under

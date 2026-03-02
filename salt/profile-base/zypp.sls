@@ -78,7 +78,7 @@ class ZyppConfigurator:
           }
 
     match __salt__['grains.get']('osfullname'):
-      case 'openSUSE Tumbleweed':
+      case 'openSUSE Tumbleweed' | 'openSUSE Tumbleweed-Slowroll':
         if self.always_use_obs_instance:
           baseurl = f"{self.baseurl}/obs"
         else:
@@ -94,8 +94,12 @@ class ZyppConfigurator:
         if self.enable_non_oss:
           dist_repositories.append('non-oss')
 
-        distro_basedir = 'tumbleweed'
-        update_basedir = 'tumbleweed'
+        if __salt__['grains.get']('osfullname') == 'openSUSE Tumbleweed-Slowroll':
+          distro_basedir = 'slowroll'
+          update_basedir = 'slowroll'
+        else:
+          distro_basedir = 'tumbleweed'
+          update_basedir = 'tumbleweed'
         update_for_baserepo = True
 
         for dist_repo in dist_repositories:
@@ -108,7 +112,10 @@ class ZyppConfigurator:
           if dist_repo == "non-oss":
             update_dir     = f"{update_basedir}-{dist_repo}"
           self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{baseurl}/{distro_basedir}/repo/{dist_repo}/")
-          self.configure_repository(state_name=update_repo_id, repo_id=update_repo_id, repo_name=repo_id, repo_url=f"{baseurl}/update/{update_dir}/")
+          if distro_basedir == 'slowroll':
+            self.configure_repository(state_name=update_repo_id, repo_id=update_repo_id, repo_name=repo_id, repo_url=f"{baseurl}/update/{distro_basedir}/repo/{dist_repo}/")
+          else:
+            self.configure_repository(state_name=update_repo_id, repo_id=update_repo_id, repo_name=repo_id, repo_url=f"{baseurl}/update/{update_dir}/")
 
           if 'oss' == dist_repo and self.enable_debug:
             self.configure_repository(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=repo_id, repo_url=f"{baseurl}/debug/{distro_basedir}/repo/{dist_repo}/")
@@ -268,7 +275,7 @@ class ZyppConfigurator:
       codecs_baseurl = "https://codecs.opensuse.org/openh264"
       codecs_url = None
 
-      if 'openSUSE Tumbleweed' == __salt__['grains.get']('osfullname'):
+      if __salt__['grains.get']('osfullname') in ['openSUSE Tumbleweed', 'openSUSE Tumbleweed-Slowroll']:
         codecs_url = f"{codecs_baseurl}/openSUSE_Tumbleweed"
 
       elif __salt__['grains.get']('osfullname') in ["Leap", "SLES" ]:
@@ -453,6 +460,10 @@ class ZyppConfigurator:
               repository_list.append("SLE_{major_version}_SP{minor_version}".format(major_version=major_version, minor_version=minor_version))
           else:
               repository_list.append("SLE_{major_version}".format(major_version=major_version))
+      elif osfullname == 'openSUSE Tumbleweed-Slowroll':
+          repository_list.append("openSUSE_Slowroll")
+          repository_list.append("openSUSE_Tumbleweed")
+          repository_list.append("openSUSE_Factory")
       elif osfullname == 'openSUSE Tumbleweed':
           repository_list.append("openSUSE_Tumbleweed")
           repository_list.append("openSUSE_Factory")
