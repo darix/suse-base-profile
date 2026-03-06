@@ -1,0 +1,115 @@
+#!/bin/sh
+#
+# Copyright (C) 2025   darix
+# Copyright (C) 2025   dmach
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+umask 077
+
+export GNUPGHOME="/etc/salt/gpgkeys"
+
+install -o root -g root -m 0700 -d ${GNUPGHOME}
+chown -R root:root ${GNUPGHOME}
+
+# GPG_TTY is required for spawning pinentry during private key removal
+export GPG_TTY=$(tty)
+
+# embed hostname to the email address
+EMAIL="salt-master@$(hostname --fqdn)"
+
+# generate key ID by the current date and time
+GPGID="${EMAIL}-$(date -Iseconds)"
+
+# read the full fingerprint of the key we're about to replace
+OLD_FINGERPRINT=$(gpg --list-keys --with-colons "$EMAIL" | awk -F : '/^pub/ {print $5}')
+
+
+echo ">>>>> INFO"
+echo "This script generates GPG key pair for salt-master."
+echo
+echo "We're keeping only the currently valid pair in the keyring."
+echo "Old public keys are always available in git history of the pass repo."
+echo
+echo "If the private key gets lost or we remove it by accident,"
+echo "it is inconvenient but it's not a big deal."
+echo "We can always fix it by generating a new key pair and re-encrypting pass."
+echo
+echo
+
+set -e
+echo ">>>>> Starting gpg-agent"
+gpgconf --launch gpg-agent
+echo
+echo
+
+
+echo ">>>>> Removing the current **private** GPG key"
+gpg -q --delete-secret-key "$EMAIL" ||:
+echo
+echo
+
+
+echo ">>>>> Removing the current **public** GPG key"
+gpg -q --delete-keys "$EMAIL" ||:
+echo
+echo
+
+
+echo ">>>>> Generating new GPG key pair for $GPGID ..."
+cat <<EOF | gpg -q --batch --generate-key
+    Key-Type: eddsa
+    Key-Curve: Ed25519
+    Key-Usage: sign
+    Subkey-Type: ecdh
+    Subkey-Curve: Curve25519
+    Subkey-Usage: encrypt
+    Name-Real: $GPGID
+    Name-Email: $EMAIL
+    # no expiration
+    Expire-Date: 0
+    # don't use any passphrase
+    %no-protection
+    %commit
+EOF
+echo
+echo
+
+
+# export the new public GPG key to the salt's GNUPGHOME directory
+echo ">>>>> Exporting the new public GPG key to disk"
+cd "$GNUPGHOME"
+gpg --output "$GPGID-public.asc" --armor --export "$GPGID"
+echo "Created ${GNUPGHOME}/${GPGID}-public.asc"
+echo
+echo
+NEW_FINGERPRINT=$(gpg --keyid-format=short --list-keys --with-colons "$EMAIL" | awk -F : '/^pub/ {print $5}')
+
+echo ">>>>> Killing gpg-agent"
+gpgconf --kill gpg-agent
+echo
+echo
+
+chown -R salt:salt ${GNUPGHOME}
+
+echo
+echo "In the gopass git repository update .gpg-id and .gpg-id-names files."
+if [ -n "${OLD_FINGERPRINT}" ] ; then
+echo "Remove '${OLD_FINGERPRINT}' from .gpg-id and .gpg-id-names files."
+echo "Remove the '.public-keys/${OLD_FINGERPRINT}'"
+fi
+echo "Now you can add '${NEW_FINGERPRINT}' to the .gpg-id/.gpg-id-names file and copy '${GNUPGHOME}/${GPGID}-public.asc' to '.public-keys/${NEW_FINGERPRINT}'."
+echo
+echo "Then run gopass sync to import the new public key .public-keys/${NEW_FINGERPRINT}"
