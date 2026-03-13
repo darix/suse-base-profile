@@ -82,6 +82,15 @@ nrpe_config:
     - require:
       - monitoring_packages
 
+nrpe_config_cleanup_commands:
+  file.replace:
+    - name: /etc/nrpe.cfg
+    - ignore_if_missing: True
+    - pattern: '^(command\[.*)$'
+    - repl: ''
+    - require:
+      - monitoring_packages
+
 nrpe_sudo_rules:
   file.managed:
     - user: root
@@ -94,7 +103,6 @@ nrpe_sudo_rules:
       - /etc/sudoers.d/99-salt-monitoring:
         - source: salt://{{ slspath }}/files/etc/sudoers.d/99-salt-monitoring.j2
 
-
 nrpe_service:
   service.running:
     - name: nrpe
@@ -102,10 +110,9 @@ nrpe_service:
     - require:
       - nrpe_config
       - nrpe_d_config
+      - nrpe_config_cleanup_commands
     - watch:
       - nrpe_config
       - nrpe_d_config
-    - onchanges:
-      - nrpe_config
-      - nrpe_d_config
+      - nrpe_config_cleanup_commands
 {%- endif %}
