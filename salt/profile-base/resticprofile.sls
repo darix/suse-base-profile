@@ -83,6 +83,8 @@ def run():
       }
 
       for section_name, section_data in __pillar__['resticprofile']['config'].items():
+        if section_name in ('global', 'groups'):
+          continue
         cmdrun_genkey          = requires_for_key_section_for_profile(section_name, section_data)
         cmdrun_init_repository = f'resticprofile_init_repository_{section_name}'
         cmdrun_initial_backup  = f'resticprofile_initial_backup_{section_name}'
