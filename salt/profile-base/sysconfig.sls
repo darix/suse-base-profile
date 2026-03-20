@@ -51,7 +51,7 @@ sysconfig_{{ file | regex_replace('/', '_') }}_{{ setting }}:
       {%- endif %}
     {%- endif -%}
     {%- if 'require_in' in file_data[key] %}
-    - require:
+    - require_in:
       {%- if file_data[key]['require_in'] is string %}
       - {{ file_data[key]['require_in'] }}
       {%- else %}
