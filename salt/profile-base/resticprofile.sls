@@ -20,7 +20,7 @@
 
 
 import os.path
-from salt.exceptions import SaltConfigurationError
+from salt.exceptions import SaltConfigurationError, SaltRenderError
 
 def is_local_repository(section_data):
   return 'repository' in section_data and (section_data['repository'].startswith('/') or section_data['repository'].startswith('local:/'))
@@ -45,7 +45,10 @@ def requires_for_key_section_for_profile(section_name, section_data):
 def run():
   config={}
 
-  config_filename = '/etc/resticprofile/profiles.yaml'
+  config_format = __salt__['pillar.get']( 'resticprofile:config_format', "yaml")
+  unless config_format in ['yaml', 'toml', 'json']:
+    raise SaltRenderError(f"The format {config_format} is not valid! only json/toml/yaml are allowed.")
+  config_filename = f'/etc/resticprofile/profiles.{{ config_format }}'
 
   if 'resticprofile' in __pillar__:
 
@@ -77,7 +80,7 @@ def run():
           {'mode': '0600'},
           {'require': requires },
           {'dataset': __pillar__['resticprofile']['config']},
-          {'serializer': 'yaml'},
+          {'serializer': config_format},
           {'serializer_opts': {'indent': 2}}
         ]
       }
