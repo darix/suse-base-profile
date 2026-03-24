@@ -470,22 +470,22 @@ class ZyppConfigurator:
           repository_list.append("openSUSE_Tumbleweed")
           repository_list.append("openSUSE_Factory")
       else:
-          log.error("Do not know how to handle distro {distro}".format(distro=osfullname))
+          log.error(f"Do not know how to handle distro {distro}")
 
       repomd_path = 'repodata/repomd.xml'
 
-      log.debug("osrelease_info: {osrelease_info} osfullname: {osfullname} repository list: {repository_list}".format(osfullname=osfullname, osrelease_info=osrelease_info, repository_list=repository_list))
+      log.debug(f"osrelease_info: {osrelease_info} osfullname: {osfullname} repository list: {repository_list}")
 
       for repository in repository_list:
           repo_url = baseurl + repository + "/"
           full_url = repo_url + repomd_path
-          log.debug("Testing {full_url}".format(full_url=full_url))
+          log.debug(f"Testing {full_url}")
           result = requests.head(full_url)
           if result.status_code in [200, 302, 301]:
               return repo_url
-          log.info("Querying {full_url} resulted in {status_code}".format(full_url=full_url, status_code=result.status_code))
+          log.info(f"Querying {full_url} resulted in {result.status_code}")
 
-      error_message = "No valid repository found for baseurl: {baseurl} repository list: {repository_list} osrelease_info: {osrelease_info} osfullname: {osfullname}".format(baseurl=baseurl, osfullname=osfullname, osrelease_info=osrelease_info, repository_list=repository_list)
+      error_message = f"No valid repository found for baseurl: {baseurl} repository list: {repository_list} osrelease_info: {osrelease_info} osfullname: {osfullname}"
 
       log.error(error_message)
       raise SaltRenderError(error_message)
