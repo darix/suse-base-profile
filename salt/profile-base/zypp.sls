@@ -448,18 +448,20 @@ class ZyppConfigurator:
           minor_version = 0
       osfullname = __salt__['grains.get']('osfullname')
       if osfullname == "SLES":
+          repository_list.append(f"SLE_{major_version}.{minor_version}")
           if len(osrelease_info) > 1:
-              repository_list.append("SLE_{major_version}_SP{minor_version}".format(major_version=major_version, minor_version=minor_version))
+              repository_list.append(f"SLE_{major_version}_SP{minor_version}")
           else:
-              repository_list.append("SLE_{major_version}".format(major_version=major_version))
-          repository_list.append("{major_version}.{minor_version}".format(major_version=major_version, minor_version=minor_version))
+              repository_list.append(f"SLE_{major_version}")
+          repository_list.append(f"{major_version}.{minor_version}")
       elif osfullname == "Leap":
-          repository_list.append("{major_version}.{minor_version}".format(major_version=major_version, minor_version=minor_version))
-          repository_list.append("openSUSE_Leap_{major_version}.{minor_version}".format(major_version=major_version, minor_version=minor_version))
+          repository_list.append(f"{major_version}.{minor_version}")
+          repository_list.append(f"openSUSE_Leap_{major_version}.{minor_version}")
+          repository_list.append(f"SLE_{major_version}.{minor_version}")
           if len(osrelease_info) > 1:
-              repository_list.append("SLE_{major_version}_SP{minor_version}".format(major_version=major_version, minor_version=minor_version))
+              repository_list.append(f"SLE_{major_version}_SP{minor_version}")
           else:
-              repository_list.append("SLE_{major_version}".format(major_version=major_version))
+              repository_list.append(f"SLE_{major_version}")
       elif osfullname == 'openSUSE Tumbleweed-Slowroll':
           repository_list.append("openSUSE_Slowroll")
           repository_list.append("openSUSE_Tumbleweed")
