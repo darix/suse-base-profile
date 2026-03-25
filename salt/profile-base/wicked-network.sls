@@ -434,12 +434,22 @@ class WickedNetworkConfig:
 
             reload_deps.append("rt_tables")
 
+            self.config["rt_tables_dir"] = {
+                "file.directory": [
+                    {"name": "/etc/iproute2/"},
+                    {"user": "root"},
+                    {"group": "root"},
+                    {"mode": "0755"},
+                ]
+            }
+
             self.config["rt_tables"] = {
                 "file.managed": [
                     {"name": "/etc/iproute2/rt_tables"},
                     {"user": "root"},
                     {"group": "root"},
                     {"mode": "0640"},
+                    {"require": ["rt_tables_dir"]},
                     {"contents": "\n".join(rt_tables_list)},
                 ]
             }
