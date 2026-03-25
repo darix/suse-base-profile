@@ -50,6 +50,7 @@ udev_net_rules_salt:
       {%- endif %}
       {%- for interface, macaddress in pillar.udev.net.items() %}
       - 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="{{ macaddress }}", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="{{ interface }}"'
+      - 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="{{ macaddress }}", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="ens*", NAME="{{ interface }}"'
       {%- endfor %}
 {%- endif %}
 
