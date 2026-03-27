@@ -179,13 +179,13 @@ class NetworkdDeviceConfigs:
 
 
     def networkd_link_file(self, interface_name):
-        return f"/etc/systemd/network/{interface_name}.link"
+        return f"/etc/systemd/network/01-{interface_name}.link"
 
     def networkd_netdev_file(self, interface_name):
-        return f"/etc/systemd/network/{interface_name}.netdev"
+        return f"/etc/systemd/network/01-{interface_name}.netdev"
 
     def networkd_network_file(self, interface_name):
-        return f"/etc/systemd/network/{interface_name}.network"
+        return f"/etc/systemd/network/01-{interface_name}.network"
 
     def networkd_link_section(self, interface_name):
         return f"networkd_{interface_name}_link"
