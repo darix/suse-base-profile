@@ -192,10 +192,6 @@ postfix_service:
     - reload: True
     - require:
       - postfix_package
-  cmd.run:
-    - name: /usr/sbin/config.postfix
-    - require:
-      - postfix_package
 # {%- else %}
 # {%- if not("postfix" in pillar)%}
 # postfix_service:
