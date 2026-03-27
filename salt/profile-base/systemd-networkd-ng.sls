@@ -293,6 +293,7 @@ class NetworkdDeviceConfigs:
 
         networkd_packages_state = "systemd_networkd_packages"
         networkd_service_state  = "systemd_networkd_service"
+        networkd_reload_state   = "systemd_networkd_reload"
 
         if 'networkd-ng' == __salt__['pillar.get']('network:type', ''):
 
@@ -471,8 +472,9 @@ class NetworkdDeviceConfigs:
                     {"group": "root"},
                     {"mode": "0640"},
                     {"require": ["rt_tables_dir"]},
-                    {"require_in": [networkd_service_state]},
-                    {"onchanges_in": [networkd_service_state]},
+                    {"require_in":   [networkd_service_state]},
+                    {"onchanges_in": [networkd_reload_state]},
+                    {"watch_in":     [networkd_service_state, networkd_reload_state]},
                     {"contents": "\n".join(rt_tables_list)},
                 ]
             }
@@ -483,8 +485,9 @@ class NetworkdDeviceConfigs:
                     {'user': 'root'},
                     {'group': 'root'},
                     {'mode': '0644'},
-                    {"require_in": [networkd_service_state]},
-                    {"onchanges_in": [networkd_service_state]},
+                    {"require_in":   [networkd_service_state]},
+                    {"onchanges_in": [networkd_reload_state]},
+                    {"watch_in":     [networkd_service_state, networkd_reload_state]},
                     {'contents': rt_tables_networkd_value},
                 ]
             }
@@ -509,11 +512,15 @@ class NetworkdDeviceConfigs:
                         {'require_in': self.unit_requires_in}
                     ]
                 }
+
             self.config[networkd_service_state] = {
                 'service.running': [
                     {'name': 'systemd-networkd'},
                     {'enable': True},
                 ],
+            }
+
+            self.config[networkd_reload_state] = {
                 'cmd.run': [
                     {'name': "echo /usr/bin/networkctl reload"},
                 ]
