@@ -24,7 +24,7 @@
 #     porta24: de:ad:be:02
 
 # network:
-#   type: sn2
+#   type: networkd-ng
 #   # normally you would have an include with those to share them
 #   default_gateways:
 #     br_ipv4:
