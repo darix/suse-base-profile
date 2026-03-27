@@ -522,7 +522,8 @@ class NetworkdDeviceConfigs:
 
             self.config[networkd_reload_state] = {
                 'cmd.run': [
-                    {'name': "echo /usr/bin/networkctl reload"},
+                    {'name':    "/usr/bin/networkctl reload"},
+                    {'require': [networkd_service_state]},
                 ]
             }
 
