@@ -328,7 +328,17 @@ class NetworkdDeviceConfigs:
                             },
                         }
                         netdev_file_data = deepmerge(netdev_file_data, interface_data.get('netdev_options', {}))
-
+                    case 'veth':
+                         link_file_data = {}
+                         netdev_file_data = {}
+                    case 'wireguard':
+                        netdev_file_data= {
+                            'NetDev': {
+                                'Name': interface_name,
+                                'Kind': 'wireguard',
+                            },
+                        }
+                        netdev_file_data = deepmerge(netdev_file_data, interface_data.get('netdev_options', {}))
                     case 'bond':
                         mac_address = self.mac_address_of_primary_interface_from_bond(interface_name)
                         netdev_file_data= {
