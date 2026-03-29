@@ -507,21 +507,22 @@ class NetworkdDeviceConfigs:
                     {'pkgs': networkd_packages},
                 ]
             }
-            for network_service in ['NetworkManager', 'wicked', 'wickedd']:
-                self.config[f"disable_{network_service}"] = {
-                    'service.disabled': [
-                        {'name': network_service},
-                        {'require': self.unit_requires},
-                        {'require_in': self.unit_requires_in}
-                    ]
-                }
-                self.config[f"kill_{network_service}"] = {
-                    'service.dead': [
-                        {'name': network_service},
-                        {'require': self.unit_requires},
-                        {'require_in': self.unit_requires_in}
-                    ]
-                }
+            if __salt__['pillar.get']('network:enforce_single_service', True):
+                for network_service in ['NetworkManager', 'wicked', 'wickedd']:
+                    self.config[f"disable_{network_service}"] = {
+                        'service.disabled': [
+                            {'name': network_service},
+                            {'require': self.unit_requires},
+                            {'require_in': self.unit_requires_in}
+                        ]
+                    }
+                    self.config[f"kill_{network_service}"] = {
+                        'service.dead': [
+                            {'name': network_service},
+                            {'require': self.unit_requires},
+                            {'require_in': self.unit_requires_in}
+                        ]
+                    }
 
             self.config[networkd_service_state] = {
                 'service.running': [
