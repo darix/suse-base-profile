@@ -49,7 +49,7 @@
       - "# Site-specific additions and overrides for '{{ profile_name }}'."
       - "# For more details, please see /etc/apparmor.d/local/README."
       {%- for override in profile_data %}
-      - '{{ override }}'
+      - '{{ override }}{%- if not(override.endswith(',')) %},{%- endif %}'
       {%- endfor %}
 {%-     endfor %}
 
