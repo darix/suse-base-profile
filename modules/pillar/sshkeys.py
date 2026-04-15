@@ -159,7 +159,7 @@ class SSHKeysResolver:
                     if line.startswith("sshkeys.users."):
                         resolved_usernames.append(line.split(".", 3)[-1])
                     elif line.startswith("sshkeys.groups."):
-                        resolved_usernames.extend(self.resolve_groups(line.split(".", 3)[-1]))
+                        resolved_usernames.extend(self.resolve_groups(username, line.split(".", 3)[-1]))
                     else:
                         raise SaltRenderError(f"Resolving groups and no idea how to handle line {line}")
             if "sshkeys" in group_data and "users" in group_data["sshkeys"]:
