@@ -27,7 +27,20 @@ def run():
 
     if "sshkeys" in __pillar__:
         for username, userdata in __pillar__["sshkeys"].items():
-            target_dir = userdata.get("target_dir", f"~{username}")
+            ssh_target_dir = None
+            if username.startswith("/"):
+                target_dir = os.path.dirname(username)
+                if target_dir.endswith("/.ssh"):
+                    ssh_target_dir = os.path.dirname(target_dir)
+                else:
+                    ssh_target_dir = target_dir
+                authorized_target_file = username
+                state_name_part = authorized_target_file.replace('/', '_')
+            else:
+                target_dir = userdata.get("target_dir", f"~{username}")
+                ssh_target_dir = f"{target_dir}/.ssh"
+                authorized_target_file = f"{target_dir}/.ssh/authorized_keys"
+                state_name_part = username
 
             if target_dir.startswith("~"):
                 homedir = os.path.expanduser(target_dir)
@@ -41,23 +54,24 @@ def run():
             target_owner = userdata.get("target_owner", username)
             target_group = userdata.get("target_group", None)
 
-            config[f"ssh-{username}-authorized-keys-dir"] = {
-                "file.directory": [
-                    {"user": target_owner},
-                    {"mode", userdata.get("dir_mode", '0751')},
-                    {"name": f"{target_dir}/.ssh"},
-                ]
-            }
+            if not(ssh_target_dir is None):
+                config[f"ssh-{state_name_part}-authorized-keys-dir"] = {
+                    "file.directory": [
+                        {"user": target_owner},
+                        {"mode", userdata.get("dir_mode", '0751')},
+                        {"name": ssh_target_dir},
+                    ]
+                }
 
-            if target_group:
-                config[f"ssh-{username}-authorized-keys-dir"]["group"] = target_group
+                if target_group:
+                    config[f"ssh-{state_name_part}-authorized-keys-dir"]["file.directory"].append({'group': target_group})
 
-            config[f"ssh-{username}-authorized-keys-file"] = {
+            config[f"ssh-{state_name_part}-authorized-keys-file"] = {
                 "file.managed": [
                     { 'user': target_owner },
                     { 'mode': '0644' },
                     { 'template': 'jinja' },
-                    { 'name': f"{target_dir}/.ssh/authorized_keys" },
+                    { 'name': authorized_target_file },
                     { 'source': f"salt://profile-base/files/root/.ssh/authorized_keys.j2" },
                     { 'context': {
                             "sshkeys": userdata["sshkeys"]
@@ -67,6 +81,6 @@ def run():
             }
 
             if target_group:
-                config[f"ssh-{username}-authorized-keys-file"]["group"] = target_group
+                config[f"ssh-{state_name_part}-authorized-keys-file"]["file.managed"].append({'group': target_group})
 
     return config
