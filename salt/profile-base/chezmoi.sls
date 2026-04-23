@@ -20,11 +20,21 @@
 
 import os.path
 
+def handle_options(chezmoi_commandline, userdata, option_name):
+    if option_name in userdata:
+      global_options = userdata.get(option_name)
+      if isinstance(global_options, list):
+        chezmoi_commandline.extend(global_options)
+      else:
+        chezmoi_commandline.append(global_options)
+
 def run():
     config = {}
 
     chezmoi_data     = __salt__["pillar.get"]("chezmoi", {})
     chezmoi_packages = ["chezmoi", "git-core"]
+
+    chezmoi_update_existing = __salt__["pillar.get"]("chezmoi:update_existing", False)
 
     if len(chezmoi_data) > 0:
       config["chezmoi_packages"] = {
@@ -52,25 +62,35 @@ def run():
           chezmoi_exists = os.path.exists(chezmoi_path)
           chezmoi_is_dir = os.path.isdir(chezmoi_path)
 
+          chezmoi_commandline = ["chezmoi"]
+
+          handle_options(chezmoi_commandline, userdata, "global_options")
+
+          state_parameters = [
+              {'runas':   username},
+              {'umask':   userdata.get('umask', '022')},
+              {'require': ["chezmoi_packages"]},
+            ]
+
           if chezmoi_exists and chezmoi_is_dir:
-            config[f"chezmoi_update_{username}"] = {
-              "cmd.run": [
-                {'name': 'chezmoi update'},
-                {'runas': username},
-                {'umask': userdata.get('umask', '022')},
-                {'require': ["chezmoi_packages"]},
-              ]
-            }
+            if chezmoi_update_existing:
+              chezmoi_commandline.append("update")
+              handle_options(chezmoi_commandline, userdata, "update_options")
+              handle_options(chezmoi_commandline, userdata, "options")
+              section_name = f"chezmoi_update_{username}"
+
+              state_parameters.append({'name': " ".join(chezmoi_commandline)})
+              config[section_name] = { "cmd.run": state_parameters }
           else:
-            config[f"chezmoi_init_{username}"] = {
-              "cmd.run": [
-                {'name':    f'chezmoi init {chezmoi_url}'},
-                {'runas':   username},
-                {'creates': chezmoi_path},
-                {'umask':   userdata.get('umask', '022')},
-                {'require': ["chezmoi_packages"]},
-              ]
-            }
+            chezmoi_commandline.append("init")
+            handle_options(chezmoi_commandline, userdata, "init_options")
+            handle_options(chezmoi_commandline, userdata, "options")
+            chezmoi_commandline.append(chezmoi_url)
+            section_name = f"chezmoi_init_{username}"
+            state_parameters.append({'creates': chezmoi_path})
+
+            state_parameters.append({'name': " ".join(chezmoi_commandline)})
+            config[section_name] = { "cmd.run": state_parameters }
     else:
       config["chezmoi_packages"] = {
         "pkg.purged": [
