@@ -1,7 +1,7 @@
 #
 # suse-base-profile
 #
-# Copyright (C) 2025   darix
+# Copyright (C) 2026   darix
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -68,3 +68,4 @@ include:
   - .nfs-exports
 {%- endif %}
   - .dotfiles
+  - .chezmoi
