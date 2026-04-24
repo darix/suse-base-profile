@@ -94,7 +94,7 @@ def run():
     else:
       config["chezmoi_packages"] = {
         "pkg.purged": [
-          {"pkgs": chezmoi_packages },
+          {"pkgs": ["chezmoi"] },
         ]
       }
 
