@@ -50,7 +50,7 @@ def run():
   if not(config_format in ['yaml', 'toml', 'json']):
     raise SaltRenderError(f"The format {config_format} is not valid! only json/toml/yaml are allowed.")
 
-  config_filename = f'/etc/resticprofile/profiles.{{ config_format }}'
+  config_filename = f'/etc/resticprofile/profiles.{config_format}'
 
   if 'resticprofile' in __pillar__:
 
