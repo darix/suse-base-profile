@@ -80,7 +80,10 @@ send_nsca_config:
   acl.present:
     - name: {{ send_nsca_config }}
     - acl_type: user
-    - acl_name: {{ pillar.nsca_ng.client.acl_users }}
+    - acl_name:
+    {%- for user in pillar.nsca_ng.client.acl_users %}
+    - {{ user }}
+    {%- endif %}
     - perms: r
     - require:
       - file: send_nsca_config
