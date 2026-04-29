@@ -76,13 +76,15 @@ send_nsca_config:
       {%- for key, value in pillar.nsca_ng.client.config.items() %}
       - '{{ key }}="{{ value }}"'
       {%- endfor %}
+{%- if "acl_users" in pillar.nsca_ng.client %}
   acl.present:
     - name: {{ send_nsca_config }}
     - acl_type: user
-    - acl_name: salt
+    - acl_name: {{ pillar.nsca_ng.client.acl_users }}
     - perms: r
     - require:
       - file: send_nsca_config
+{%- endif %}
 {%- endif %}
 
 {%- if 'salt' in pillar and 'minion' in pillar.salt %}
