@@ -76,18 +76,33 @@ send_nsca_config:
       {%- for key, value in pillar.nsca_ng.client.config.items() %}
       - '{{ key }}="{{ value }}"'
       {%- endfor %}
+
 {%- if "acl_users" in pillar.nsca_ng.client %}
+  {%- for user in pillar.nsca_ng.client.acl_users %}
+send_nsca_config_acl_user_{{ user }}:
   acl.present:
     - name: {{ send_nsca_config }}
     - acl_type: user
-    - acl_name:
-    {%- for user in pillar.nsca_ng.client.acl_users %}
-    - {{ user }}
-    {%- endfor %}
+    - acl_name: {{ user }}
     - perms: r
     - require:
       - file: send_nsca_config
+  {%- endfor %}
 {%- endif %}
+
+{%- if "acl_groups" in pillar.nsca_ng.client %}
+  {%- for group in pillar.nsca_ng.client.acl_groups %}
+send_nsca_config_acl_group_{{ group }}:
+  acl.present:
+    - name: {{ send_nsca_config }}
+    - acl_type: group
+    - acl_name: {{ group }}
+    - perms: r
+    - require:
+      - file: send_nsca_config
+  {%- endfor %}
+{%- endif %}
+
 {%- endif %}
 
 {%- if 'salt' in pillar and 'minion' in pillar.salt %}
