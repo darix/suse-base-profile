@@ -65,9 +65,7 @@ def run():
       remove_module(config, module)
 
   if len(modprobe_config) > 0:
-    contents = list_or_string(modprobe_config)
-    print(f"type: {type(contents)}\n")
-    names_list.append({modprobe_filename: [{'contents': contents}]})
+    names_list.append({modprobe_filename: [{'contents': list_or_string(modprobe_config)}]})
   else:
     config["cleanup_modprobe"] = {
       "file.absent": [
@@ -76,9 +74,7 @@ def run():
     }
 
   if len(modules_load_config) > 0:
-    contents = list_or_string(modules_load_config)
-    print(f"type: {type(contents)}\n")
-    names_list.append({modules_load_filename: [{'contents': contents}]})
+    names_list.append({modules_load_filename: [{'contents': list_or_string(modules_load_config)}]})
   else:
     config["cleanup_modules_load"] = {
       "file.absent": [
@@ -91,8 +87,5 @@ def run():
     config["modules_config"] = {
       'file.managed': shared_settings
     }
-
-  import pprint
-  pprint.pp(config)
 
   return config
