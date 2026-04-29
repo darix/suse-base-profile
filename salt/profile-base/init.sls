@@ -24,6 +24,7 @@ include:
   - .locale
   - .hosts-file
 {%- if not(is_container) %}
+  - .modules
   - .kexec-reboot
   - .systemd-networkd-ng
   - .wicked-network
