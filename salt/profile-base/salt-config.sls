@@ -83,7 +83,7 @@ send_nsca_config:
     - acl_name:
     {%- for user in pillar.nsca_ng.client.acl_users %}
     - {{ user }}
-    {%- endif %}
+    {%- endfor %}
     - perms: r
     - require:
       - file: send_nsca_config
