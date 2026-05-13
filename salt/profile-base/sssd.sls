@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+{%- set is_code_16 = (grains.osfullname in ["Leap", "SLES" ] and (grains.osrelease|float) >= 16) %}
 
 {% if 'sssd' in pillar %}
 sssd_packages:
@@ -23,15 +24,17 @@ sssd_packages:
     - names:
       - sssd
       - sssd-ldap
-{%- if 'autofs' in pillar.sssd and pillar.sssd.autofs %}
+      {%- if 'autofs' in pillar.sssd and pillar.sssd.autofs %}
       - autofs
-{%- endif %}
-# 32bit package needed as pam-config always wants the 32bit variant
-{%- if grains.osrelease | float < 15.6 %}
+      {%- endif %}
+    {%- if grains.osrelease_info == 15 %}
+      # 32bit package needed as pam-config always wants the 32bit variant
+      {%- if grains.osrelease | float < 15.6 %}
       - sssd-common-32bit
-{%- else %}
+      {%- else %}
       - sssd-32bit
-{%- endif %}
+      {%- endif %}
+    {%- endif %}
 
 sssd_config:
   file.managed:
@@ -42,6 +45,19 @@ sssd_config:
     - names:
       - /etc/sssd/conf.d/salt.conf:
         - source: salt://{{ slspath }}/files/etc/sssd/conf.d/salt.conf.j2
+
+{%- if is_code_16 %}
+fix_config_permissions:
+  file.managed:
+    - user: root
+    - group: root
+    - mode: '0600'
+    - names:
+      - /etc/sssd/conf.d/salt.conf: {}
+      - /etc/sssd/sssd.conf: {}
+    - require_in:
+      - sssd_service
+{%- endif %}
 
 sssd_pam_enable:
   cmd.run:
@@ -81,23 +97,24 @@ sssd_service:
       - sssd_pam_enable
       - sssd_config
       - ldap_config_for_autofs
-    - onchanges:
-      - sssd_config
-      - ldap_config_for_autofs
     - watch:
       - sssd_config
       - ldap_config_for_autofs
 
 {%- if 'autofs' in pillar.sssd and pillar.sssd.autofs %}
+nfs_client_packages:
+  pkg.installed:
+    - pkgs:
+      - nfs-client
+    - require_in:
+      - autofs_service
+
 autofs_service:
   service.running:
     - name: autofs.service
     - enable: True
     - require:
       - sssd_pam_enable
-      - sssd_config
-      - ldap_config_for_autofs
-    - onchanges:
       - sssd_config
       - ldap_config_for_autofs
     - watch:
