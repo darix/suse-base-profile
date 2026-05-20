@@ -260,4 +260,19 @@ run_dehydrated:
 #/ if certs
 {%-   endif %}
 #/ if dehydrated
+{%- else %}
+dehydrated_timer_service:
+  service.dead:
+    - name: dehydrated.timer
+    - require_in:
+      - dehydrated_package
+    - enable: False
+
+dehydrated_package:
+  pkg.purged:
+    - pkgs:
+      - dehydrated
+      - dehydrated-apache2
+      - dehydrated-nginx
+      - dehydrated-acmeresponder
 {%- endif %}
