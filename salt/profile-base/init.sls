@@ -37,9 +37,8 @@ include:
   - .mounts
   - .systemd-coredump
   - .systemd-socket-redirector
-  - .systemd-settings
 {%- endif %}
-  - .systemd-overrides
+  - .systemd-settings
   - .sysconfig
   - .screen
   - .tmux
