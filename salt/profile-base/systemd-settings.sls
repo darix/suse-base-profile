@@ -40,7 +40,19 @@
 #         'ForwardToSyslog': 'yes'
 #         'SystemKeepFree': '1G'
 
-{%- macro render_file_content(file_data) %}
+{%- macro render_file_content(override_section, drop_in_file, file_data, restart_section) %}
+{{ override_section }}:
+  file.managed:
+    - name: {{ drop_in_file }}
+    - makedirs: true
+    - dir_mode: '0755'
+    - mode: '0644'
+    - user: root
+    - group: root
+    - watch_in:
+      - systemd_daemon_reload
+      - {{ restart_section }}
+    - contents:
       {%- if 'managed_by_salt' in pillar %}
       - "# {{ pillar.managed_by_salt }}"
       {%- endif %}
@@ -94,18 +106,8 @@ systemd_journald_directory:
 {%- set cleaned_service_name = service.replace('.', '_') %}
 {%- set override_section = 'systemd_settings_' ~ systemd_part %}
 {%- set restart_section = 'systemd_settings_restart_' ~ systemd_part %}
-{{ override_section }}:
-  file.managed:
-    - name: {{ drop_in_file }}
-    - makedirs: true
-    - dir_mode: '0755'
-    - mode: '0644'
-    - user: root
-    - group: root
-    - watch_in:
-      - systemd_daemon_reload
-    - contents:
-{{ render_file_content(systemd_part_settings) }}
+
+{{ render_file_content(override_section, drop_in_file, systemd_part_settings, restart_section) }}
 
 {{ reload_or_restart_job(service, restart_section, override_section, cleaned_service_name) }}
 
@@ -125,19 +127,8 @@ systemd_journald_directory:
 
 {%-       do systemd_units.append(override_section) %}
 
-{{ override_section }}:
-  file.managed:
-    - name: {{ systemd_unit }}
-    - makedirs: true
-    - dir_mode: '0755'
-    - mode: '0644'
-    - user: root
-    - group: root
-    - watch_in:
-      - systemd_daemon_reload
-      - {{ restart_section }}
-    - contents:
-{{ render_file_content(service_data) }}
+
+{{ render_file_content(override_section, systemd_unit, service_data, restart_section) }}
 
 {{ reload_or_restart_job(service, restart_section, override_section, cleaned_service_name) }}
 {%- endfor %}
