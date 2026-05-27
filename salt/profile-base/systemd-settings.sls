@@ -100,12 +100,16 @@ systemd_journald_directory:
     - group: systemd-journal
     - dir_mode: '2755'
 
+{%- set systemd_units = [] %}
+{%- set dropin_files  = [] %}
+
 {%- for systemd_part, systemd_part_settings in salt['pillar.get']('systemd:settings', {}).items() %}
 {%- set drop_in_file = '/etc/systemd/' ~ systemd_part ~ '.conf.d/99-salt.conf' %}
 {%- set service = 'systemd-'~ systemd_part ~ '.service' %}
 {%- set cleaned_service_name = service.replace('.', '_') %}
 {%- set override_section = 'systemd_settings_' ~ systemd_part %}
 {%- set restart_section = 'systemd_settings_restart_' ~ systemd_part %}
+{%- do systemd_units.append(override_section) %}
 
 {{ render_file_content(override_section, drop_in_file, systemd_part_settings, restart_section) }}
 
@@ -114,7 +118,6 @@ systemd_journald_directory:
 {%- endfor %}
 
 {%- set systemd_dir = '/etc/systemd/system' %}
-{%- set systemd_units = [] %}
 
 {%- if 'systemd' in pillar %}
 {%-   if 'overrides' in pillar.systemd %}
@@ -132,7 +135,10 @@ systemd_journald_directory:
 
 {{ reload_or_restart_job(service, restart_section, override_section, cleaned_service_name) }}
 {%- endfor %}
+{%-   endif %}
+{%- endif %}
 
+{%- if systemd_units|length > 0 or dropin_files|length > 0 %}
 systemd_daemon_reload:
   module.run:
     - name: service.systemctl_reload
@@ -140,6 +146,7 @@ systemd_daemon_reload:
     {%- for service in systemd_units %}
       - {{ service }}
     {%- endfor %}
-
-{%-   endif %}
+    {%- for dropin in dropin_files %}
+      - {{ dropin }}
+    {%- endfor %}
 {%- endif %}
