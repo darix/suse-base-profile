@@ -441,7 +441,7 @@ class NetworkdDeviceConfigs:
                     ensure_section(network_file_data, 'Network')
                     network_file_data['Network']['Bridge'] = interface_data['bridged_to']
 
-                if interface_data.get("global_default_route", False):
+                if interface_data.get("global_default_route", False) or not(self.needs_rule_based_routing):
                     ensure_section(network_file_data, 'Network')
                     network_file_data['Network']['Gateway'] = []
 
