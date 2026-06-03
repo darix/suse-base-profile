@@ -132,7 +132,7 @@ def ensure_section(current_config, section):
         current_config[section] = {}
 
 def deepmerge(current_config, additional_config):
-    return dictupdate.update(copy.deepcopy(current_config), copy.deepcopy(additional_config))
+    return dictupdate.update(copy.deepcopy(current_config), copy.deepcopy(additional_config), merge_lists=True)
 
 class NetworkdDeviceConfigs:
     def __init__(self):
