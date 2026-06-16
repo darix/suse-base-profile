@@ -304,6 +304,8 @@ class NetworkdDeviceConfigs:
             self.unit_onchanges_in.append(networkd_service_state)
             self.needs_rule_based_routing = self.check_if_needs_rule_based_routing()
 
+            self.inject_default_routes = __salt__['pillar.get']('network:inject_default_route', True)
+
             current_devices = self.currently_handled_networkd_devices()
 
             for interface_name, interface_data in self.interfaces_pillar.items():
@@ -441,7 +443,7 @@ class NetworkdDeviceConfigs:
                     ensure_section(network_file_data, 'Network')
                     network_file_data['Network']['Bridge'] = interface_data['bridged_to']
 
-                if interface_data.get("global_default_route", False) or not(self.needs_rule_based_routing):
+                if (interface_data.get("global_default_route", False) or not(self.needs_rule_based_routing)) and self.inject_default_routes:
                     ensure_section(network_file_data, 'Network')
                     network_file_data['Network']['Gateway'] = []
 
