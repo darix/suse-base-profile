@@ -113,17 +113,17 @@ class ZyppConfigurator:
             update_dir     = f"{update_basedir}-{dist_repo}"
           self.configure_repository(state_name=repo_id, repo_id=repo_id, repo_name=repo_id, repo_url=f"{baseurl}/{distro_basedir}/repo/{dist_repo}/")
           if distro_basedir == 'slowroll':
-            self.configure_repository(state_name=update_repo_id, repo_id=update_repo_id, repo_name=repo_id, repo_url=f"{baseurl}/update/{distro_basedir}/repo/{dist_repo}/")
+            self.configure_repository(state_name=update_repo_id, repo_id=update_repo_id, repo_name=update_repo_id, repo_url=f"{baseurl}/update/{distro_basedir}/repo/{dist_repo}/")
           else:
-            self.configure_repository(state_name=update_repo_id, repo_id=update_repo_id, repo_name=repo_id, repo_url=f"{baseurl}/update/{update_dir}/")
+            self.configure_repository(state_name=update_repo_id, repo_id=update_repo_id, repo_name=update_repo_id, repo_url=f"{baseurl}/update/{update_dir}/")
 
           if 'oss' == dist_repo and self.enable_debug:
-            self.configure_repository(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=repo_id, repo_url=f"{baseurl}/debug/{distro_basedir}/repo/{dist_repo}/")
+            self.configure_repository(state_name=debug_repo_id, repo_id=debug_repo_id, repo_name=debug_repo_id, repo_url=f"{baseurl}/debug/{distro_basedir}/repo/{dist_repo}/")
           else:
             self.purge_repository(state_name=debug_repo_id, repo_id=debug_repo_id)
 
           if 'oss' == dist_repo and self.enable_source:
-            self.configure_repository(state_name=source_repo_id, repo_id=source_repo_id, repo_name=repo_id, repo_url=f"{baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
+            self.configure_repository(state_name=source_repo_id, repo_id=source_repo_id, repo_name=source_repo_id, repo_url=f"{baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
           else:
             self.purge_repository(state_name=source_repo_id, repo_id=source_repo_id)
 
@@ -228,7 +228,7 @@ class ZyppConfigurator:
                 self.purge_repository(state_name=debug_repo_id, repo_id=debug_repo_id)
 
               if dist_repo == "oss" and self.enable_source:
-                self.configure_repository(state_name=source_repo_id, repo_id=source_repo_id, repo_name=repo_id, repo_url=f"{baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
+                self.configure_repository(state_name=source_repo_id, repo_id=source_repo_id, repo_name=source_repo_id, repo_url=f"{baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
               else:
                 self.purge_repository(state_name=source_repo_id, repo_id=source_repo_id)
           case 15:
@@ -261,7 +261,7 @@ class ZyppConfigurator:
                 self.purge_repository(state_name=debug_update_repo_id, repo_id=debug_update_repo_id)
 
               if dist_repo in ["oss", "non-oss"] and self.enable_source:
-                self.configure_repository(state_name=source_repo_id, repo_id=source_repo_id, repo_name=repo_id, repo_url=f"{baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
+                self.configure_repository(state_name=source_repo_id, repo_id=source_repo_id, repo_name=source_repo_id, repo_url=f"{baseurl}/source/{distro_basedir}/repo/{dist_repo}/")
               else:
                 self.purge_repository(state_name=source_repo_id, repo_id=source_repo_id)
           case _:
