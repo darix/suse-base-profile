@@ -57,9 +57,9 @@ postfix_sysconfig_relayhost:
     - require:
       - postfix_package
     - require_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - onchanges_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - pattern: POSTFIX_RELAYHOST=".*"
     - repl: POSTFIX_RELAYHOST="[{{ pillar.mail.relay }}]"
 {%- endif %}
@@ -70,9 +70,9 @@ postfix_sysconfig_myhostname:
     - require:
       - postfix_package
     - require_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - onchanges_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - pattern: POSTFIX_MYHOSTNAME=".*"
     - repl: POSTFIX_MYHOSTNAME="{{ myhostname }}"
     - append_if_not_found: True
@@ -84,9 +84,9 @@ postfix_sysconfig_masquerade_domain:
     - require:
       - postfix_package
     - require_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - onchanges_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - pattern: POSTFIX_MASQUERADE_DOMAIN=".*"
     - repl: POSTFIX_MASQUERADE_DOMAIN="{{ pillar.mail.masquerade_domain }}"
 {%- endif %}
@@ -97,9 +97,9 @@ postfix_sysconfig_masquerade_exceptions:
     - require:
       - postfix_package
     - require_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - onchanges_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - pattern: POSTFIX_ADD_MASQUERADE_EXCEPTIONS=".*"
     - repl: POSTFIX_ADD_MASQUERADE_EXCEPTIONS=""
     - append_if_not_found: True
@@ -110,9 +110,9 @@ postfix_sysconfig_mynetworks:
     - require:
       - postfix_package
     - require_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - onchanges_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - pattern: POSTFIX_ADD_MYNETWORKS_STYLE=".*"
     - repl: POSTFIX_ADD_MYNETWORKS_STYLE="{{ mynetworks_style }}"
     - append_if_not_found: True
@@ -124,9 +124,9 @@ postfix_sysconfig_bind_adress:
     - require:
       - postfix_package
     - require_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - onchanges_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - pattern: POSTFIX_ADD_SMTP_BIND_ADDRESS=".*"
     - repl: POSTFIX_ADD_SMTP_BIND_ADDRESS="{{ pillar.mail.smtp_bind_address }}"
     - append_if_not_found: True
@@ -138,9 +138,9 @@ postfix_sysconfig_mail_from_header:
     - require:
       - postfix_package
     - require_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - onchanges_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - pattern: FROM_HEADER=".*"
     - repl: FROM_HEADER="{{ from_header }}"
 
@@ -150,9 +150,9 @@ postfix_sysconfig_mail_listen_remote:
     - require:
       - postfix_package
     - require_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - onchanges_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - pattern: SMTPD_LISTEN_REMOTE=".*"
     - repl: SMTPD_LISTEN_REMOTE="{{ listen_remote }}"
 
@@ -164,9 +164,9 @@ mail_aliases_{{ alias }}:
     - require:
       - postfix_package
     - require_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - onchanges_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - pattern: "^{{ alias }}:.*"
     - repl: "{{ alias }}: {{ target }}"
     - append_if_not_found: True
@@ -178,14 +178,14 @@ run_newaliases:
     - require:
       - postfix_package
     - require_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - onchanges_in:
-      - postfix_service
+      - mailrelay_postfix_service
     - onchanges:
       - file: /etc/aliases
 {%- endif %}
 
-postfix_service:
+mailrelay_postfix_service:
   service.running:
     - name: postfix
     - enable: True
@@ -194,7 +194,7 @@ postfix_service:
       - postfix_package
 # {%- else %}
 # {%- if not("postfix" in pillar)%}
-# postfix_service:
+# mailrelay_postfix_service:
 #   service.dead:
 #     - name: postfix
 #     - enable: False
@@ -204,6 +204,6 @@ postfix_service:
 #     - pkgs:
 #       - postfix
 #     - require:
-#       - postfix_service
+#       - mailrelay_postfix_service
 # {%- endif %}
 {%- endif %}
