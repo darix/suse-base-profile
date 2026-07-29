@@ -45,6 +45,63 @@ class ZyppConfigurator:
     self.enable_openh264         = __salt__["pillar.get"]("zypp:enable_openh264", False)  or __salt__["pillar.get"]("zypp:products_enable_openh264", False)
     self.enable_backports        = __salt__['pillar.get']('zypp:enable_backports', False) or __salt__['pillar.get']('zypp:products_enable_backports', False)
 
+    variables_dir = '/etc/zypp/vars.d/'
+    current_variable_files = os.listdir(variables_dir)
+
+    for variable_name, variable_value in __salt__['pillar.get']("zypp:variables", {}).items():
+      variable_file = os.path.join(variables_dir, variable_name)
+      if variable_name in current_variable_files:
+        current_variable_files.remove(variable_name)
+
+      self.config[f"zypp_variables_add_{variable_name}"] = {
+        "file.managed": [
+          {'name': variable_file},
+          {'user': 'root'},
+          {'group': 'root'},
+          {'mode': '0644'},
+          {'contents': variable_value}
+        ]
+      }
+
+    for variable_name in current_variable_files:
+      variable_file = os.path.join(variables_dir, variable_name)
+      self.config[f"zypp_variables_remove_{variable_name}"] = {
+        "file.absent": [
+          {'name': variable_file},
+        ]
+      }
+
+    vendor_dir = '/etc/zypp/vendors.d'
+    current_vendor_files = [f.replace('.conf', '') for f in os.listdir(vendor_dir)]
+
+    if '00-openSUSE' in current_vendor_files:
+      current_vendor_files.remove('00-openSUSE')
+
+    for vendor_mapping, vendor_list in __salt__['pillar.get']("zypp:vendor_mapping", {}).items():
+      vendor_file = f"{os.path.join(vendor_dir, vendor_mapping)}.conf"
+
+      if vendor_mapping in current_vendor_files:
+        current_vendor_files.remove(vendor_mapping)
+
+      vendor_file_content = f"[main]\nvendors={(',').join(vendor_list)}\n"
+      self.config[f"zypp_vendor_add_{vendor_mapping}"] = {
+        "file.managed": [
+          {'name': vendor_file},
+          {'user': 'root'},
+          {'group': 'root'},
+          {'mode': '0644'},
+          {'contents': vendor_file_content}
+        ]
+      }
+
+    for vendor_mapping in current_vendor_files:
+      vendor_file = f"{os.path.join(vendor_dir, vendor_mapping)}.conf"
+      self.config[f"zypp_vendor_remove_{vendor_mapping}"] = {
+        "file.absent": [
+          {'name': vendor_file},
+        ]
+      }
+
     for filename, file_settings in __salt__["pillar.get"]("zypp:config", {}).items():
       uapi_dir = f"/etc/zypp/{filename}.d"
       if os.path.exists(uapi_dir):
