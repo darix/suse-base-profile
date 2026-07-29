@@ -480,13 +480,21 @@ class ZyppConfigurator:
     fields.extend(additional_fields)
     self.config[state_name] = {"file.absent": fields }
 
+  def apply_zypp_variables(self, url):
+    variables = __salt__['pillar.get']('zypp:variables', {})
+    for variable_name, variable_value in variables.items():
+      needle = f"${{{variable_name}}}"
+      log.error(f"replacing: url={url} needle={needle} value={variable_value}")
+      url = url.replace(needle, variable_value)
+    return url
+
   def repomd_key_url(self, baseurl):
     try:
       if not(baseurl.endswith('/')):
           baseurl = f"{baseurl}/"
       repomd_key_path = 'repodata/repomd.xml.key'
       repomd_url = f"{baseurl}{repomd_key_path}"
-      result = requests.head(repomd_url)
+      result = requests.head(self.apply_zypp_variables(repomd_url))
       log.info(f"Querying {repomd_url} resulted in {result.status_code}")
       if result.status_code in [200, 302, 301]:
           return repomd_url
@@ -535,7 +543,7 @@ class ZyppConfigurator:
 
       for repository in repository_list:
           repo_url = baseurl + repository + "/"
-          full_url = repo_url + repomd_path
+          full_url = self.apply_zypp_variables(repo_url + repomd_path)
           log.debug(f"Testing {full_url}")
           result = requests.head(full_url)
           if result.status_code in [200, 302, 301]:
