@@ -484,7 +484,6 @@ class ZyppConfigurator:
     variables = __salt__['pillar.get']('zypp:variables', {})
     for variable_name, variable_value in variables.items():
       needle = f"${{{variable_name}}}"
-      log.error(f"replacing: url={url} needle={needle} value={variable_value}")
       url = url.replace(needle, variable_value)
     return url
 
