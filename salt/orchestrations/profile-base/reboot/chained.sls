@@ -21,6 +21,9 @@ import salt.utils  as su
 import salt.config as sc
 from salt.exceptions import SaltRenderError
 
+import logging
+log = logging.getLogger("ChainedRebooter")
+
 def run():
   config = {}
 
@@ -31,9 +34,15 @@ def run():
 
   state_up_wait_timeout = __salt__['pillar.get']('state_up_wait_timeout', 300)
   health_check_command  = __salt__['pillar.get']('health_check_command', ['/root/bin/ishappy'])
+  dont_do_healthchecks_i_know_what_i_am_doing = __salt__['pillar.get']('dont_do_healthchecks_i_know_what_i_am_doing', False)
+
+  log.info(f"Arguments: tgt:{tgt} state_up_wait_timeout:{state_up_wait_timeout} dont_do_healthchecks_i_know_what_i_am_doing:{dont_do_healthchecks_i_know_what_i_am_doing} health_check_command:{health_check_command}")
 
   if tgt is None:
     raise SaltRenderError(f"the matches entry in the pillar can not be None")
+
+  if len(health_check_command) < 1:
+    raise SaltRenderError(f"health_check_command can not be empty")
 
   if isinstance(tgt, list):
     hosts = tgt
@@ -55,11 +64,12 @@ def run():
     reboot_deps = []
 
     if not(previous_host is None):
-      reboot_deps = [f"wait_for_healthy_{previous_host}"]
+      if dont_do_healthchecks_i_know_what_i_am_doing:
+        reboot_deps = [f"wait_for_up_{previous_host}"]
+      else:
+        reboot_deps = [f"wait_for_healthy_{previous_host}"]
 
     previous_host = host
-
-    reboot_condition = '/usr/bin/needs-restarting --reboothint'
 
     config[reboot_state] = {
       'salt.function': [
@@ -67,8 +77,6 @@ def run():
         {'tgt_type': tgt_type_post_resolve},
         {'tgt': host},
         {'require': reboot_deps},
-        {'require_in': [wait_up_state]},
-        # {'onlyif': reboot_condition},
       ]
     }
 
@@ -77,20 +85,20 @@ def run():
         {'name': 'salt/minion/*/start'},
         {'timeout': state_up_wait_timeout},
         {'id_list': [host]},
-        # {'onlyif': reboot_condition},
-        # {'require': [reboot_state]},
-        {'require_in': [wait_health_state]},
+        {'require': [reboot_state]},
       ]
     }
 
-    config[wait_health_state] = {
-      'salt.function': [
-        {'name': 'cmd.run'},
-        {'arg':  health_check_command},
-        {'tgt': host},
-        {'tgt_type': tgt_type_post_resolve},
-      ]
-    }
+    if not(dont_do_healthchecks_i_know_what_i_am_doing):
+      config[wait_health_state] = {
+        'salt.function': [
+          {'name': 'cmd.run'},
+          {'arg':  health_check_command},
+          {'tgt': host},
+          {'tgt_type': tgt_type_post_resolve},
+          {'require': [wait_up_state]}
+        ]
+      }
 
     # config[wait_health_state] = {
     #   'salt.wait_for_event': [
