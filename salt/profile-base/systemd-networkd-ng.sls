@@ -376,6 +376,8 @@ class NetworkdDeviceConfigs:
                         if mac_address is not None:
                             netdev_file_data['NetDev']['MACAddress'] = mac_address
                         netdev_file_data = deepmerge(netdev_file_data, interface_data.get('netdev_options', {}))
+                        # Do not match on the network file with a mac address. more than one bridge can have the same mac address in this configuration
+                        mac_address = None
 
                     case _:
                         mac_address = __salt__['pillar.get'](f'udev:net:{interface_name}', interface_data.get('mac_address'))
