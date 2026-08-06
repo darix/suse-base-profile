@@ -35,6 +35,7 @@ def run():
   state_up_wait_timeout = __salt__['pillar.get']('state_up_wait_timeout', 300)
   health_check_command  = __salt__['pillar.get']('health_check_command', ['/root/bin/ishappy'])
   dont_do_healthchecks_i_know_what_i_am_doing = __salt__['pillar.get']('dont_do_healthchecks_i_know_what_i_am_doing', False)
+  reverse_sort_minion_list = __salt__['pillar.get']('reverse_sort_minion_list', True)
 
   log.info(f"Arguments: tgt:{tgt} state_up_wait_timeout:{state_up_wait_timeout} dont_do_healthchecks_i_know_what_i_am_doing:{dont_do_healthchecks_i_know_what_i_am_doing} health_check_command:{health_check_command}")
 
@@ -55,6 +56,10 @@ def run():
       raise SaltRenderError(f"Could not match anything with tgt:{tgt} tgt_type:{tgt_type} => {check_hosts}")
 
   previous_host = None
+
+  if reverse_sort_minion_list:
+    hosts.sort()
+    hosts.reverse()
 
   for host in hosts:
     reboot_state      = f"reboot_minion_{host}"
