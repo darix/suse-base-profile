@@ -12,6 +12,7 @@ def run():
   tgt_type_post_resolve = "list"
 
   state_up_wait_timeout = __salt__['pillar.get']('state_up_wait_timeout', 300)
+  health_check_command  = __salt__['pillar.get']('health_check_command', ['/root/bin/ishappy'])
 
   if tgt is None:
     raise SaltRenderError(f"the matches entry in the pillar can not be None")
@@ -48,14 +49,10 @@ def run():
     ]
   }
 
-  commands = [
-    '/root/bin/ishappy',
-  ]
-
   config[wait_health_state] = {
     'salt.function': [
       {'name': 'cmd.run'},
-      {'arg':  commands},
+      {'arg':  health_check_command},
       {'tgt': hosts},
       {'tgt_type': tgt_type_post_resolve},
     ]
