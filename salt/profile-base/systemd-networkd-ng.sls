@@ -317,7 +317,7 @@ class NetworkdDeviceConfigs:
                     current_devices.remove(interface_name)
                 tablename = self.table_from_interface(interface_name)
                 interface_type = interface_data.get('Kind', 'ether')
-                interface_match_type = interface_data.get('Kind', '!bond !vlan !bridge')
+                interface_match_type = interface_data.get('Kind', interface_data.get('Type','ether'))
                 interface_mtu = interface_data.get('mtu', 1500)
 
                 mac_address = None
@@ -381,7 +381,7 @@ class NetworkdDeviceConfigs:
                         mac_address = __salt__['pillar.get'](f'udev:net:{interface_name}', interface_data.get('mac_address'))
                         link_file_data = {
                             'Match': {
-                                'Kind': interface_match_type,
+                                'Type': interface_match_type,
                                 'MACAddress': mac_address,
                             },
                             'Link': {
@@ -390,7 +390,7 @@ class NetworkdDeviceConfigs:
                         }
 
                         link_file_data = deepmerge(link_file_data, interface_data.get('link_options', {}))
-                network_file_data['Match'] = { 'Kind': interface_match_type }
+                network_file_data['Match'] = { 'Type': interface_match_type }
 
                 if mac_address is None:
                     network_file_data['Match']['Name'] = interface_name
