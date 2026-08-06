@@ -342,7 +342,7 @@ class NetworkdDeviceConfigs:
                         }
                         netdev_file_data = deepmerge(netdev_file_data, interface_data.get('netdev_options', {}))
                     case 'bond':
-                        mac_address = self.mac_address_of_primary_interface_from_bond(interface_name)
+                        # mac_address = self.mac_address_of_primary_interface_from_bond(interface_name)
                         netdev_file_data= {
                             'NetDev': {
                                 'Name': interface_name,
