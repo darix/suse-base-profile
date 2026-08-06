@@ -24,7 +24,7 @@ def run():
   check_script_lines = __salt__['pillar.get']('healthcheck_script', [])
   filename = '/root/bin/ishappy'
 
-  if len(check_script_lines) > 0:p
+  if len(check_script_lines) > 0:
     if isinstance(check_script_lines):
       check_script_lines = "\n".join(check_script_lines)
 
