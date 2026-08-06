@@ -290,7 +290,7 @@ class NetworkdDeviceConfigs:
 
     def mac_for_interface(self, hw_interface):
       pillar_key = f"network:interfaces:{hw_interface}:mac_address"
-      return _salt__['pillar.get'](pillar_key, self.udev_net_pillar.get(hw_interface))
+      return __salt__['pillar.get'](pillar_key, self.udev_net_pillar.get(hw_interface))
 
     def states(self):
         networkd_packages = ["systemd-networkd"]
