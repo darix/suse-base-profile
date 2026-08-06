@@ -69,3 +69,4 @@ include:
 {%- endif %}
   - .dotfiles
   - .chezmoi
+  - .reboot-health-checks
