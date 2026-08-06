@@ -31,9 +31,13 @@ def run():
 
   state_up_wait_timeout = __salt__['pillar.get']('state_up_wait_timeout', 300)
   health_check_command  = __salt__['pillar.get']('health_check_command', ['/root/bin/ishappy'])
+  dont_do_healthchecks_i_know_what_i_am_doing = __salt__['pillar.get']('dont_do_healthchecks_i_know_what_i_am_doing', False)
 
   if tgt is None:
     raise SaltRenderError(f"the matches entry in the pillar can not be None")
+
+  if len(health_check_command) < 1:
+    raise SaltRenderError(f"health_check_command can not be empty")
 
   if isinstance(tgt, list):
     hosts = tgt
@@ -63,18 +67,19 @@ def run():
       {'name': 'salt/minion/*/start'},
       {'timeout': state_up_wait_timeout},
       {'id_list': hosts},
-      {'require_in': [wait_health_state]},
     ]
   }
 
-  config[wait_health_state] = {
-    'salt.function': [
-      {'name': 'cmd.run'},
-      {'arg':  health_check_command},
-      {'tgt': hosts},
-      {'tgt_type': tgt_type_post_resolve},
-    ]
-  }
+  if not(dont_do_healthchecks_i_know_what_i_am_doing):
+    config[wait_health_state] = {
+      'salt.function': [
+        {'name': 'cmd.run'},
+        {'arg':  health_check_command},
+        {'tgt': hosts},
+        {'tgt_type': tgt_type_post_resolve},
+        {'require': [wait_up_state]},
+      ]
+    }
 
   # config[wait_health_state] = {
   #   'salt.wait_for_event': [
