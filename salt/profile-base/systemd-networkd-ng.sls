@@ -272,21 +272,25 @@ class NetworkdDeviceConfigs:
         for hw_interface, data in self.interfaces_pillar.items():
             pillar_key = f"network:interfaces:{hw_interface}:network_options:Network:Bridge"
             if bridge_name == __salt__['pillar.get'](pillar_key, ""):
-                return self.udev_net_pillar.get(hw_interface)
+                return self.mac_for_interface(hw_interface)
             pillar_key = f"network:interfaces:{hw_interface}:bridged_to"
             if bridge_name == __salt__['pillar.get'](pillar_key, ""):
-                return self.udev_net_pillar.get(hw_interface)
+                return self.mac_for_interface(hw_interface)
             return self.mac_address_of_primary_interface_from_bond(hw_interface)
 
     def mac_address_of_primary_interface_from_bond(self, bond_name):
         for hw_interface, data in self.interfaces_pillar.items():
             pillar_key = f"network:interfaces:{hw_interface}:network_options:Network:Bond"
             if bond_name == __salt__['pillar.get'](pillar_key, ""):
-                return self.udev_net_pillar.get(hw_interface)
+                return self.mac_for_interface(hw_interface)
             pillar_key = f"network:interfaces:{hw_interface}:bonded_to"
             if bond_name == __salt__['pillar.get'](pillar_key, ""):
-                return self.udev_net_pillar.get(hw_interface)
+                return self.mac_for_interface(hw_interface)
         return None
+
+    def mac_for_interface(self, hw_interface):
+      pillar_key = f"network:interfaces:{hw_interface}:mac_address"
+      return _salt__['pillar.get'](pillar_key, self.udev_net_pillar.get(hw_interface))
 
     def states(self):
         networkd_packages = ["systemd-networkd"]
