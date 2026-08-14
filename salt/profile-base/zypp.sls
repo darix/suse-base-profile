@@ -74,8 +74,9 @@ class ZyppConfigurator:
     vendor_dir = '/etc/zypp/vendors.d'
     current_vendor_files = [f.replace('.conf', '') for f in os.listdir(vendor_dir)]
 
-    if '00-openSUSE' in current_vendor_files:
-      current_vendor_files.remove('00-openSUSE')
+    for vendor_file in ['00-openSUSE', '00-SUSE']:
+      if vendor_file in current_vendor_files:
+        current_vendor_files.remove(vendor_file)
 
     for vendor_mapping, vendor_list in __salt__['pillar.get']("zypp:vendor_mapping", {}).items():
       vendor_file = f"{os.path.join(vendor_dir, vendor_mapping)}.conf"
