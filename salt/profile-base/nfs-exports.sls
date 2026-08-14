@@ -80,7 +80,7 @@ def run():
                     { "user":    "root" },
                     { "group":   "root" },
                     { "mode":    "0644" },
-                    { "contents": f"Domain = {idmap_domain}"}
+                    { "contents": f"[General]\nDomain = {idmap_domain}"}
                 ]
             }
         else:
