@@ -292,6 +292,9 @@ class NetworkdDeviceConfigs:
       pillar_key = f"network:interfaces:{hw_interface}:mac_address"
       return __salt__['pillar.get'](pillar_key, self.udev_net_pillar.get(hw_interface))
 
+    def is_bonded(self, ifdata):
+      return (ifdata.get('network_options', {}).get('Network', {}).get('Bond', None) is not None) or (ifdata.get('bonded_to', None) is not None)
+
     def states(self):
         networkd_packages = ["systemd-networkd"]
 
@@ -394,7 +397,7 @@ class NetworkdDeviceConfigs:
                         link_file_data = deepmerge(link_file_data, interface_data.get('link_options', {}))
                 network_file_data['Match'] = { 'Type': interface_match_type }
 
-                if mac_address is None:
+                if mac_address is None or self.is_bonded(interface_data) or interface_data.get('match_on', 'mac_address') == 'name':
                     network_file_data['Match']['Name'] = interface_name
                 else:
                     network_file_data['Match']['MACAddress']= mac_address
