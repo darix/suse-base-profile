@@ -1,7 +1,8 @@
+#!py
 #
 # suse-base-profile
 #
-# Copyright (C) 2025   darix
+# Copyright (C) 2026   darix
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -39,114 +40,140 @@
 #         'Storage': 'persistent'
 #         'ForwardToSyslog': 'yes'
 #         'SystemKeepFree': '1G'
+from salt.exceptions import SaltRenderError
+import os
+import logging
 
-{%- macro render_file_content(override_section, drop_in_file, file_data, restart_section) %}
-{{ override_section }}:
-  file.managed:
-    - name: {{ drop_in_file }}
-    - makedirs: true
-    - dir_mode: '0755'
-    - mode: '0644'
-    - user: root
-    - group: root
-    - watch_in:
-      - systemd_daemon_reload
-      - {{ restart_section }}
-    - contents:
-      {%- if 'managed_by_salt' in pillar %}
-      - "# {{ pillar.managed_by_salt }}"
-      {%- endif %}
-      {%- for section_name, section_data in file_data.items() %}
-      - '[{{ section_name }}]'
-      {%- if section_data is list %}
-      {%-   for setting_data in section_data %}
-      - {{ setting_data }}
-      {%-   endfor %}
-      {%- else %}
-      {%- for k,v in section_data.items() %}
-      - {{ k }}={{ v }}
-      {%- endfor %}
-      {%- endif %}
-      {%- endfor %}
-{%- endmacro %}
+log = logging.getLogger('miau')
 
-{%- macro reload_or_restart_job(service, restart_section, override_section, cleaned_service_name) %}
-{{ restart_section }}:
-  cmd.run:
-    - name: '/usr/bin/systemctl try-reload-or-restart {{ service }}'
-    - onlyif: '/usr/bin/systemctl is-active {{ service }}'
-    {%- if cleaned_service_name in salt['cp.list_states']() %}
-    - require:
-      - {{ cleaned_service_name }}
-    {%- endif %}
-    - onchanges:
-      - systemd_daemon_reload
-    - require:
-      - systemd_daemon_reload
-    - watch:
-      - systemd_daemon_reload
-    - onchanges:
-      - {{ override_section }}
-{%- endmacro %}
+def render_file_content(config, override_section, drop_in_file, file_data, restart_section):
+  file_content = []
+  if __salt__['pillar.get']('managed_by_salt', False):
+    file_content.append(f"# {__salt__['pillar.get']('managed_by_salt')}")
+  for section_name, section_data in file_data.items():
+    file_content.append(f'[{section_name}]')
+    if isinstance(section_data, list):
+      file_content.extend(section_data)
+    elif isinstance(section_data, dict):
+      file_content.extend([f'{k}={v}' for k,v in section_data.items()])
+    else:
+      raise SaltRenderError(f'No idea how to handle {type(section_data)} for section_data')
 
-cleanup_systemd_journald_settings:
-  file.absent:
-    - name: /etc/systemd/journald.conf
-
-systemd_journald_directory:
-  file.directory:
-    - name: /var/log/journal
-    - user: root
-    - group: systemd-journal
-    - dir_mode: '2755'
-
-{%- set systemd_units = [] %}
-{%- set dropin_files  = [] %}
-
-{%- for systemd_part, systemd_part_settings in salt['pillar.get']('systemd:settings', {}).items() %}
-{%- set drop_in_file = '/etc/systemd/' ~ systemd_part ~ '.conf.d/99-salt.conf' %}
-{%- set service = 'systemd-'~ systemd_part ~ '.service' %}
-{%- set cleaned_service_name = service.replace('.', '_') %}
-{%- set override_section = 'systemd_settings_' ~ systemd_part %}
-{%- set restart_section = 'systemd_settings_restart_' ~ systemd_part %}
-{%- do systemd_units.append(override_section) %}
-
-{{ render_file_content(override_section, drop_in_file, systemd_part_settings, restart_section) }}
-
-{{ reload_or_restart_job(service, restart_section, override_section, cleaned_service_name) }}
-
-{%- endfor %}
-
-{%- set systemd_dir = '/etc/systemd/system' %}
-
-{%- if 'systemd' in pillar %}
-{%-   if 'overrides' in pillar.systemd %}
-{%-     for service, service_data in pillar.systemd.overrides.items() %}
-
-{%-       set systemd_unit         = systemd_dir ~ "/" ~ service ~ ".d/99-salt.conf" %}
-{%-       set cleaned_service_name = service.replace('.', '_') %}
-{%-       set override_section     = "systemd_override_" ~ cleaned_service_name %}
-{%-       set restart_section      = "forced_restart_" ~ cleaned_service_name %}
-
-{%-       do systemd_units.append(override_section) %}
+  config[override_section] = {
+    'file.managed': [
+      {'name': drop_in_file},
+      {'user': 'root'},
+      {'group': 'root'},
+      {'mode': '0644'},
+      {'dir_mode': '0755'},
+      {'watch_in': ['systemd_daemon_reload', restart_section]},
+      {'contents': file_content},
+    ]
+  }
 
 
-{{ render_file_content(override_section, systemd_unit, service_data, restart_section) }}
+def reload_or_restart_job(config, service, restart_section, override_section, cleaned_service_name):
+  reload_deps  = ['systemd_daemon_reload']
+  require_deps = ['systemd_daemon_reload']
 
-{{ reload_or_restart_job(service, restart_section, override_section, cleaned_service_name) }}
-{%- endfor %}
-{%-   endif %}
-{%- endif %}
+  if cleaned_service_name in __salt__['cp.list_states']():
+    require_deps.append(cleaned_service_name)
 
-{%- if systemd_units|length > 0 or dropin_files|length > 0 %}
-systemd_daemon_reload:
-  module.run:
-    - name: service.systemctl_reload
-    - onchanges:
-    {%- for service in systemd_units %}
-      - {{ service }}
-    {%- endfor %}
-    {%- for dropin in dropin_files %}
-      - {{ dropin }}
-    {%- endfor %}
-{%- endif %}
+  config[restart_section] = {
+    'cmd.run': [
+      { 'name': f'/usr/bin/systemctl try-reload-or-restart {service}'},
+      { 'onlyif': '/usr/bin/systemctl is-active {service}'},
+      { 'require': reload_deps},
+      { 'watch': reload_deps},
+      { 'onchanges': [override_section]},
+    ]
+  }
+
+def walk_for_dropins(dirname):
+  result = []
+  log.error(f'walkin {dirname}')
+  if os.path.isdir(dirname):
+    log.error(f'is dir {dirname}')
+    for filename in os.listdir(dirname):
+      full_path = str(os.path.join(dirname, filename))
+      log.error(f'full_path {full_path}')
+      if full_path.endswith('.d') and os.path.isdir(full_path):
+        log.error(f'is .d dir {full_path}')
+        result.extend(walk_for_dropins(full_path))
+      elif os.path.isfile(full_path) and dirname.endswith('.d'):
+        log.error(f'is file {full_path}')
+        result.append(full_path)
+  return result
+
+def run():
+  config = {}
+
+  config['cleanup_systemd_journald_settings'] = {
+    'file.absent': [
+      {'name': '/etc/systemd/journald.conf'}
+    ]
+  }
+
+
+  config['systemd_journald_directory'] = {
+    'file.directory': [
+      { 'name': '/var/log/journal'},
+      { 'user': 'root' },
+      { 'group': 'systemd-journal' },
+      { 'dir_mode': '2755' },
+    ]
+  }
+
+  existing_systemd_units = walk_for_dropins('/etc/systemd')
+  log.error(f'existing_systemd_units: {existing_systemd_units}')
+  systemd_units = []
+  dropin_files  = []
+
+  for systemd_part, systemd_part_settings in __salt__['pillar.get']('systemd:settings', {}).items():
+    drop_in_file         = f'/etc/systemd/{systemd_part}.conf.d/99-salt.conf'
+    service              = f'systemd-{systemd_part}.service'
+    cleaned_service_name = service.replace('.', '_')
+    override_section     = f'systemd_settings_{systemd_part}'
+    restart_section      = f'systemd_settings_restart_{systemd_part}'
+
+    systemd_units.append(override_section)
+    if drop_in_file in existing_systemd_units:
+      existing_systemd_units.remove(drop_in_file)
+
+    render_file_content(config, override_section, drop_in_file, systemd_part_settings, restart_section)
+    reload_or_restart_job(config, service, restart_section, override_section, cleaned_service_name)
+
+
+  systemd_dir = '/etc/systemd/system'
+
+  for service, service_data in __salt__['pillar.get']('systemd:overrides', {}).items():
+    systemd_unit         = f'{systemd_dir}/{service}.d/99-salt.conf'
+    cleaned_service_name = service.replace('.', '_')
+    override_section     = f'systemd_override_{cleaned_service_name}'
+    restart_section      = f'forced_restart_{cleaned_service_name}'
+
+    systemd_units.append(override_section)
+    if systemd_unit in existing_systemd_units:
+      existing_systemd_units.append(systemd_unit)
+
+    render_file_content(config, override_section, systemd_unit, service_data, restart_section)
+    reload_or_restart_job(config, service, restart_section, override_section, cleaned_service_name)
+
+  for filename in existing_systemd_units:
+    config[f'remove_unmanaged_{filename}'] = {
+      'file.absent': [
+        {'name': filename},
+        {'onchanges_in': ['systemd_daemon_reload']},
+      ]
+    }
+
+  all_units = systemd_units + dropin_files
+  if len(all_units) > 0:
+    config['systemd_daemon_reload'] = {
+      'module.run': [
+        { 'name': 'service.systemctl_reload'},
+        { 'onchanges': all_units },
+      ]
+    }
+
+  return config
