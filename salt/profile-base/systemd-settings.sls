@@ -44,8 +44,6 @@ from salt.exceptions import SaltRenderError
 import os
 import logging
 
-log = logging.getLogger('miau')
-
 def render_file_content(config, override_section, drop_in_file, file_data, restart_section):
   file_content = []
   if __salt__['pillar.get']('managed_by_salt', False):
@@ -91,17 +89,12 @@ def reload_or_restart_job(config, service, restart_section, override_section, cl
 
 def walk_for_dropins(dirname):
   result = []
-  log.error(f'walkin {dirname}')
   if os.path.isdir(dirname):
-    log.error(f'is dir {dirname}')
     for filename in os.listdir(dirname):
       full_path = str(os.path.join(dirname, filename))
-      log.error(f'full_path {full_path}')
       if full_path.endswith('.d') and os.path.isdir(full_path):
-        log.error(f'is .d dir {full_path}')
         result.extend(walk_for_dropins(full_path))
       elif os.path.isfile(full_path) and dirname.endswith('.d'):
-        log.error(f'is file {full_path}')
         result.append(full_path)
   return result
 
@@ -125,7 +118,6 @@ def run():
   }
 
   existing_systemd_units = walk_for_dropins('/etc/systemd')
-  log.error(f'existing_systemd_units: {existing_systemd_units}')
   systemd_units = []
   dropin_files  = []
 
