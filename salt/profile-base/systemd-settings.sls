@@ -101,7 +101,7 @@ def walk_for_dropins(dirname):
         result.extend(walk_for_dropins(full_path))
       elif os.path.isfile(full_path) and dirname.endswith('.d'):
         result.append(full_path)
-  for preserved_file in preserved_file:
+  for preserved_file in preserved_files:
     if preserved_file in result:
       result.remove(preserved_file)
   return result
