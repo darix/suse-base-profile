@@ -68,6 +68,7 @@ def render_file_content(config, override_section, drop_in_file, file_data, resta
       {'group': 'root'},
       {'mode': '0644'},
       {'dir_mode': '0755'},
+      {'makedirs': True},
       {'watch_in': ['systemd_daemon_reload', restart_section]},
       {'contents': file_content},
     ]
