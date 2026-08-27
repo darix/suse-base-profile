@@ -44,6 +44,10 @@ from salt.exceptions import SaltRenderError
 import os
 import logging
 
+preserved_files = [
+  '/etc/systemd/networkd.conf.d/routing_tables.conf',
+]
+
 def render_file_content(config, override_section, drop_in_file, file_data, restart_section):
   file_content = []
   if __salt__['pillar.get']('managed_by_salt', False):
@@ -96,6 +100,9 @@ def walk_for_dropins(dirname):
         result.extend(walk_for_dropins(full_path))
       elif os.path.isfile(full_path) and dirname.endswith('.d'):
         result.append(full_path)
+  for preserved_file in preserved_file:
+    if preserved_file in result:
+      result.remove(preserved_file)
   return result
 
 def run():
