@@ -206,6 +206,7 @@ class NetworkdDeviceConfigs:
                     {"mode":         "0640"},
                     {"require":      self.unit_requires},
                     {"require_in":   self.unit_requires_in},
+                    {"watch_in":     self.unit_onchanges_in},
                     {"onchanges_in": self.unit_onchanges_in},
                     {"contents":     render_dict_to_ini_string(dataset)},
                 ]
@@ -308,7 +309,7 @@ class NetworkdDeviceConfigs:
             self.interfaces_pillar = __salt__['pillar.get']('network:interfaces', {})
             self.unit_requires.append(networkd_packages_state)
             self.unit_requires_in.append(networkd_service_state)
-            self.unit_onchanges_in.append(networkd_service_state)
+            self.unit_onchanges_in.append(networkd_reload_state)
             self.needs_rule_based_routing = self.check_if_needs_rule_based_routing()
 
             self.inject_default_routes = __salt__['pillar.get']('network:inject_default_route', True)
