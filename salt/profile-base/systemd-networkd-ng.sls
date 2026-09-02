@@ -396,7 +396,13 @@ class NetworkdDeviceConfigs:
                         }
 
                         link_file_data = deepmerge(link_file_data, interface_data.get('link_options', {}))
-                network_file_data['Match'] = { 'Type': interface_match_type }
+
+                network_match_class = 'Type'
+
+                if interface_match_type == 'veth':
+                  network_match_class = 'Kind'
+
+                network_file_data['Match'] = { network_match_class: interface_match_type }
 
                 if mac_address is None or self.is_bonded(interface_data) or interface_data.get('match_on', 'mac_address') == 'name':
                     network_file_data['Match']['Name'] = interface_name
