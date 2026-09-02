@@ -139,7 +139,7 @@ class NetworkdDeviceConfigs:
         self.config={}
         self.unit_requires     = []
         self.unit_requires_in  = []
-        self.unit_onchanges_in = []
+        self.unit_watch_in = []
 
         self.rt_tables = []
         self.rt_tables_defaults_list = [
@@ -206,7 +206,7 @@ class NetworkdDeviceConfigs:
                     {"mode":         "0640"},
                     {"require":      self.unit_requires},
                     {"require_in":   self.unit_requires_in},
-                    {"onchanges_in": self.unit_onchanges_in},
+                    {"watch_in":     self.unit_watch_in},
                     {"contents":     render_dict_to_ini_string(dataset)},
                 ]
             }
@@ -215,7 +215,7 @@ class NetworkdDeviceConfigs:
             "file.absent": [
                 {'name': path},
                 {'require_in':   self.unit_requires_in},
-                {'onchanges_in': self.unit_onchanges_in},
+                {'watch_in':     self.unit_watch_in},
             ]
         }
 
@@ -306,9 +306,9 @@ class NetworkdDeviceConfigs:
 
             self.udev_net_pillar   = __salt__['pillar.get']("udev:net", {})
             self.interfaces_pillar = __salt__['pillar.get']('network:interfaces', {})
-            self.unit_requires.append(networkd_packages_state)
-            self.unit_requires_in.append(networkd_service_state)
-            self.unit_onchanges_in.append(networkd_service_state)
+            self.unit_requires.extend([networkd_service_state, networkd_reload_state])
+            self.unit_requires_in.extend([networkd_service_state, networkd_reload_state])
+            self.unit_watch_in.extend([networkd_service_state, networkd_reload_state])
             self.needs_rule_based_routing = self.check_if_needs_rule_based_routing()
 
             self.inject_default_routes = __salt__['pillar.get']('network:inject_default_route', True)
@@ -505,7 +505,7 @@ class NetworkdDeviceConfigs:
                     {'mode': '0644'},
                     {"require_in":   [networkd_service_state]},
                     {"onchanges_in": [networkd_reload_state]},
-                    {"watch_in":     [networkd_service_state, networkd_reload_state]},
+                    {"watch_in":     [networkd_reload_state]},
                     {'contents': rt_tables_networkd_value},
                 ]
             }
