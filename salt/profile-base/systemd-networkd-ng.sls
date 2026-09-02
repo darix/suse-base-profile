@@ -516,7 +516,13 @@ class NetworkdDeviceConfigs:
                     {'pkgs': networkd_packages},
                 ]
             }
+
+            purge_foreign_packages_requires = []
+            purge_foreign_packages_requires.extend(self.unit_requires_in)
+            purge_foreign_packages_requires.append("purge_network_packages")
+
             if __salt__['pillar.get']('network:enforce_single_service', True):
+
                 for network_service in ['NetworkManager', 'wicked', 'wickedd']:
                     self.config[f"disable_{network_service}"] = {
                         'service.disabled': [
@@ -528,10 +534,19 @@ class NetworkdDeviceConfigs:
                     self.config[f"kill_{network_service}"] = {
                         'service.dead': [
                             {'name': network_service},
+                            {'enable': False},
                             {'require': self.unit_requires},
-                            {'require_in': self.unit_requires_in}
+                            {'require_in': self.unit_requires_in},
+                            {'onchanges_in': [networkd_service_state]}
                         ]
                     }
+
+            if __salt__['pillar.get']('network:purge_foreign_packages', True):
+              self.config[f"purge_network_packages"] = {
+                'pkg.purged': [
+                  {'pkgs': ['wicked', 'wicked-service', 'NetworkManager']},
+                ]
+              }
 
             self.config[networkd_service_state] = {
                 'service.running': [
