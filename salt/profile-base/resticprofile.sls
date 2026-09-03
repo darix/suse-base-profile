@@ -83,7 +83,7 @@ def run():
           {'require': requires },
           {'dataset': __pillar__['resticprofile']['config']},
           {'serializer': config_format},
-          {'serializer_opts': {'indent': 2}}
+          {'serializer_opts': [{'indent': 2}]}
         ]
       }
 
