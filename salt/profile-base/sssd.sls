@@ -54,7 +54,6 @@ fix_config_permissions:
     - mode: '0600'
     - names:
       - /etc/sssd/conf.d/salt.conf: {}
-      - /etc/sssd/sssd.conf: {}
     - require_in:
       - sssd_service
 {%- endif %}
