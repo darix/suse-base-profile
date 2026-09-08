@@ -22,10 +22,10 @@
 def run():
   config = {}
   check_script_lines = __salt__['pillar.get']('healthcheck_script', [])
-  filename = '/root/bin/ishappy'
+  filename = '/root/bin/is_happy'
 
   if len(check_script_lines) > 0:
-    if isinstance(check_script_lines):
+    if isinstance(check_script_lines, list):
       check_script_lines = "\n".join(check_script_lines)
 
     config[f'healthcheck_script'] = {

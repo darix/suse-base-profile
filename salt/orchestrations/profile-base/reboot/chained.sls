@@ -33,7 +33,7 @@ def run():
   tgt_type_post_resolve = 'glob'
 
   state_up_wait_timeout = __salt__['pillar.get']('state_up_wait_timeout', 300)
-  health_check_command  = __salt__['pillar.get']('health_check_command', ['/root/bin/ishappy'])
+  health_check_command  = __salt__['pillar.get']('health_check_command', ['/root/bin/is_happy'])
   dont_do_healthchecks_i_know_what_i_am_doing = __salt__['pillar.get']('dont_do_healthchecks_i_know_what_i_am_doing', False)
   reverse_sort_minion_list = __salt__['pillar.get']('reverse_sort_minion_list', True)
 
