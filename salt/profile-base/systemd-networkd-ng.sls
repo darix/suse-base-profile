@@ -177,15 +177,19 @@ class NetworkdDeviceConfigs:
     def ifroute_path(self, interface_name):
         return f"/etc/sysconfig/network/ifroute-{interface_name}"
 
+    def prefix_interface_name(self, interface_name, use_device_name_as_is=False):
+      if use_device_name_as_is:
+        return interface_name
+      return f"01-{interface_name}"
 
-    def networkd_link_file(self, interface_name):
-        return f"/etc/systemd/network/01-{interface_name}.link"
+    def networkd_link_file(self, interface_name, use_device_name_as_is=False):
+        return f"/etc/systemd/network/{self.prefix_interface_name(interface_name, use_device_name_as_is)}.link"
 
-    def networkd_netdev_file(self, interface_name):
-        return f"/etc/systemd/network/01-{interface_name}.netdev"
+    def networkd_netdev_file(self, interface_name, use_device_name_as_is=False):
+        return f"/etc/systemd/network/{self.prefix_interface_name(interface_name, use_device_name_as_is)}.netdev"
 
-    def networkd_network_file(self, interface_name):
-        return f"/etc/systemd/network/01-{interface_name}.network"
+    def networkd_network_file(self, interface_name, use_device_name_as_is=False):
+        return f"/etc/systemd/network/{self.prefix_interface_name(interface_name, use_device_name_as_is)}.network"
 
     def networkd_link_section(self, interface_name):
         return f"networkd_{interface_name}_link"
@@ -220,19 +224,19 @@ class NetworkdDeviceConfigs:
             ]
         }
 
-    def purge_all_units_for_interface(self, interface_name):
+    def purge_all_units_for_interface(self, interface_name, use_device_name_as_is=False):
         self.purge_wicked_units(interface_name)
-        self.purge_networkd_units(interface_name)
+        self.purge_networkd_units(interface_name, use_device_name_as_is)
 
     def purge_wicked_units(self, interface_name):
         self.absent_file_with_deps(self.ifcfg_section(interface_name),            self.ifcfg_path(interface_name))
         self.absent_file_with_deps(self.ifrule_section(interface_name),           self.ifrule_path(interface_name))
         self.absent_file_with_deps(self.ifroute_section(interface_name),          self.ifroute_path(interface_name))
 
-    def purge_networkd_units(self, interface_name):
-        self.absent_file_with_deps(self.networkd_link_section(interface_name),    self.networkd_link_file(interface_name))
-        self.absent_file_with_deps(self.networkd_netdev_section(interface_name),  self.networkd_netdev_file(interface_name))
-        self.absent_file_with_deps(self.networkd_network_section(interface_name), self.networkd_network_file(interface_name))
+    def purge_networkd_units(self, interface_name, use_device_name_as_is=False):
+        self.absent_file_with_deps(self.networkd_link_section(interface_name),    self.networkd_link_file(interface_name, use_device_name_as_is))
+        self.absent_file_with_deps(self.networkd_netdev_section(interface_name),  self.networkd_netdev_file(interface_name, use_device_name_as_is))
+        self.absent_file_with_deps(self.networkd_network_section(interface_name), self.networkd_network_file(interface_name, use_device_name_as_is))
 
     def check_if_needs_rule_based_routing(self):
         default_routes_found = 0
@@ -317,8 +321,10 @@ class NetworkdDeviceConfigs:
             current_devices = self.currently_handled_networkd_devices()
 
             for interface_name, interface_data in self.interfaces_pillar.items():
-                if interface_name in current_devices:
-                    current_devices.remove(interface_name)
+                prefixed_interface_name = self.prefix_interface_name(interface_name)
+                if prefixed_interface_name in current_devices:
+                    current_devices.remove(prefixed_interface_name)
+
                 tablename = self.table_from_interface(interface_name)
                 interface_type = interface_data.get('Kind', 'ether')
                 interface_match_type = interface_data.get('Kind', interface_data.get('Type','ether'))
@@ -470,7 +476,8 @@ class NetworkdDeviceConfigs:
                 self.systemd_unit_file_state(network_file_data, self.networkd_network_section(interface_name), self.networkd_network_file(interface_name))
 
             for interface_name in current_devices:
-                self.purge_all_units_for_interface(interface_name)
+                # TODO: this uses are normal purge helper
+                self.purge_all_units_for_interface(interface_name, use_device_name_as_is=True)
 
             table_index = 1
             rt_tables_list = self.rt_tables_defaults_list
