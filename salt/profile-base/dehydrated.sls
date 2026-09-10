@@ -74,7 +74,7 @@ dehydrated_services:
     - name: /etc/ssl/services/
     - user: dehydrated
     - group: dehydrated
-    - mode: '0711'
+    - mode: '0751'
 
 {%-     if 'config' in pillar.dehydrated %}
 {%-       set setting = 'CONFIG_D' %}
