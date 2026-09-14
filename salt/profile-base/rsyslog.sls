@@ -24,10 +24,14 @@ uninstall_syslog_ng_package:
 
 {%- if 'syslog' in pillar %}
 {%- set rsyslog_version_dep = '>= 8.2406.0' %}
+{%- set relp_version_dep    = '1.11.0' %}
+{%- if (grains.osfullname in ["openSUSE Tumbleweed", "openSUSE Tumbleweed-Slowroll"]) %}
+{%- set relp_version_dep    = '1.13.0' %}
+{%- endif %}
 rsyslog_package:
   pkg.installed:
     - pkgs:
-      - librelp0: '1.11.0'
+      - librelp0: {{ relp_version_dep }}
       - rsyslog: '{{ rsyslog_version_dep }}'
       - rsyslog-module-relp: '{{ rsyslog_version_dep }}'
     - require:
