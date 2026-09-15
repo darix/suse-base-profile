@@ -77,9 +77,15 @@
       - "Description=Port redirector service {{ service }}"
       - "Requires=network.target"
       - "After=network.target"
+      {%- for line in service_data.get("service", {}).get('Unit', []) %}
+      - "{{ line }}"
+      {%- endfor %}
       - "#"
       - "[Service]"
       - "ExecStart=/usr/lib/systemd/systemd-socket-proxyd {{ service_data.target }}"
+      {%- for line in service_data.get("service", {}).get('Service', []) %}
+      - "{{ line }}"
+      {%- endfor %}
       - "#"
       - "[Install]"
       - "WantedBy=multi-user.target"
