@@ -422,8 +422,6 @@ class NetworkdDeviceConfigs:
                         'Address': addresses,
                     }
 
-
-
                     if self.needs_rule_based_routing:
                         network_file_data["RoutingPolicyRule"] = []
                         network_file_data["Route"] = []
@@ -454,6 +452,7 @@ class NetworkdDeviceConfigs:
                             )
 
                 if (0 == __salt__['pillar.get']('sysctl:net.ipv6.conf.default.accept_ra', 1)) or (0 == __salt__['pillar.get']('sysctl:net.ipv6.conf.all.accept_ra', 1)):
+                    ensure_section(network_file_data, 'Network')
                     network_file_data['Network']['IPv6AcceptRA'] = 'no'
 
                 if 'bonded_to' in interface_data:
