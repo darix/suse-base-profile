@@ -422,8 +422,7 @@ class NetworkdDeviceConfigs:
                         'Address': addresses,
                     }
 
-                    if (0 == __salt__['pillar.get']('sysctl:net.ipv6.conf.default.accept_ra', 1)) or (0 == __salt__['pillar.get']('sysctl:net.ipv6.conf.all.accept_ra', 1)):
-                        network_file_data['Network']['IPv6AcceptRA'] = 'no'
+
 
                     if self.needs_rule_based_routing:
                         network_file_data["RoutingPolicyRule"] = []
@@ -453,6 +452,9 @@ class NetworkdDeviceConfigs:
                                     'Table': tablename,
                                 }
                             )
+
+                if (0 == __salt__['pillar.get']('sysctl:net.ipv6.conf.default.accept_ra', 1)) or (0 == __salt__['pillar.get']('sysctl:net.ipv6.conf.all.accept_ra', 1)):
+                    network_file_data['Network']['IPv6AcceptRA'] = 'no'
 
                 if 'bonded_to' in interface_data:
                     ensure_section(network_file_data, 'Network')
