@@ -76,12 +76,22 @@ def run():
 
     previous_host = host
 
+    config[reboot_required] = {
+      salt.function: [
+        {'name': 'system.file_exists'},
+        {'tgt_type': tgt_type_post_resolve},
+        {'tgt': host},
+        {'arg': ['/boot/do_purge_kernels']},
+        {'require': reboot_deps},
+      ]
+    }
+
     config[reboot_state] = {
       'salt.function': [
         {'name': 'system.reboot'},
         {'tgt_type': tgt_type_post_resolve},
         {'tgt': host},
-        {'require': reboot_deps},
+        {'require': reboot_required},
       ]
     }
 

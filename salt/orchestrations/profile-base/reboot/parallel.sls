@@ -53,11 +53,21 @@ def run():
   wait_up_state     = f"wait_for_up_all"
   wait_health_state = f"wait_for_healthy_all"
 
+  config[reboot_required] = {
+    salt.function: [
+      {'name': 'system.file_exists'},
+      {'tgt_type': tgt_type_post_resolve},
+      {'tgt': host},
+      {'arg': ['/boot/do_purge_kernels']},
+    ]
+  }
+
   config[reboot_state] = {
     'salt.function': [
       {'name': 'system.reboot'},
       {'tgt_type': tgt_type_post_resolve},
       {'tgt': hosts},
+      {'require': [reboot_required]},
       {'require_in': [wait_up_state]},
     ]
   }
