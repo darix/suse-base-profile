@@ -81,7 +81,7 @@ def run():
         {'name': 'system.file_exists'},
         {'tgt_type': tgt_type_post_resolve},
         {'tgt': host},
-        {'arg': ['/boot/do_purge_kernels']},
+        {'arg': ['/run/reboot-needed']},
         {'require': reboot_deps},
       ]
     }
@@ -91,7 +91,7 @@ def run():
         {'name': 'system.reboot'},
         {'tgt_type': tgt_type_post_resolve},
         {'tgt': host},
-        {'require': reboot_required},
+        {'require': [reboot_required]},
       ]
     }
 
