@@ -39,7 +39,9 @@
 {%- do passwd_modules.append("sss") %}
 {%- do shadow_modules.append("sss") %}
 {%- do group_modules.append("sss") %}
+{%- if pillar.get('use_passwd_plus_entries', False) %}
 {%- do passwd_compat_modules.append("sss") %}
+{%- endif %}
 {%- endif %}
 
 {%- if pillar.sssd.get('netgroup', False) %}
@@ -70,17 +72,19 @@ nsswitch_passwd:
       - nsswitch_copy_to_etc
 {%- endif %}
 
-{% if passwd_compat_modules |length > 0 %}
 nsswitch_passwd_compat:
   file.replace:
     - name: /etc/nsswitch.conf
     - pattern: '^(passwd_compat:\s+).*?$'
+    {% if passwd_compat_modules |length > 0 %}
     - repl: 'passwd_compat: {{ passwd_compat_modules| join(" ") }}'
+    {%- else %}
+    - repl: ''
+    {%- endif %}
     - append_if_not_found: True
 {%- if is_modern_linux %}
     - require:
       - nsswitch_copy_to_etc
-{%- endif %}
 {%- endif %}
 
 nsswitch_group:
