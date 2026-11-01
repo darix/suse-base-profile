@@ -11,9 +11,6 @@ resticprofile:
       backup:
         exclude-caches: true
         one-file-system: true
-        schedule: daily
-        schedule-lock-wait: 2h
-        schedule-permission: system
       password-file: /etc/resticprofile/{{ grains.id }}.key
       retention:
         compact: false
