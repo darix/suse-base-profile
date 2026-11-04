@@ -18,13 +18,39 @@
 #
 
 {%- if "network" in pillar and "resolver" in pillar.network %}
+
+resolved_service:
+{%- if salt['pillar.get']('network:resolver:use_resolved', False) %}
+  service.running:
+    - name: systemd-resolved.service
+    - enable: True
+    - require:
+      - systemd_settings_resolved
+{%- else %}
+  service.dead:
+    - name: systemd-resolved.service
+    - enable: False
+{%- endif %}
+
 resolv_conf:
+{%- if salt['pillar.get']('network:resolver:use_resolved', False) %}
+
+  file.symlink:
+    - name: /etc/resolv.conf
+    - target: /run/systemd/resolve/stub-resolv.conf
+    - require:
+      - resolved_service
+
+{%- else %}
+
   file.managed:
     - user: root
     - group: root
     - mode: '0644'
     - template: jinja
     - follow_symlinks: false
+    - require:
+      - resolved_service
     - context:
       default_options:
         - "timeout:1"
@@ -32,6 +58,9 @@ resolv_conf:
     - names:
       - /etc/resolv.conf:
         - source: salt://{{ slspath }}/files/etc/resolv.conf.j2
+
+{%- endif %}
+
   cmd.run:
     - name: /usr/sbin/config.postfix
     - onlyif: test -f /usr/sbin/config.postfix
