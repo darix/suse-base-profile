@@ -18,6 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+def instance_service_state_name(instance_name):
+  return f'rsyncd_service_{instance_name}'
+
 def run():
   config = {}
   rsyncd_defaults  = __salt__['pillar.get']('rsync:defaults', {})
@@ -42,21 +45,27 @@ def run():
 
     if rsyncd_has_modules:
       config_names.append({
-        '/etc/rsyncd.conf': [{
-          'context': {
-            'rsync_pillar_defaults': rsyncd_defaults,
-            'rsync_pillar_modules': rsyncd_modules,
-          }
-        }]
+        '/etc/rsyncd.conf': [
+          { 'context': {
+              'rsync_pillar_defaults': rsyncd_defaults,
+              'rsync_pillar_modules': rsyncd_modules,
+            }
+          },
+          {'require_in': ['rsyncd_service']},
+          {'watch_in':   ['rsyncd_service']},
+        ]
       })
 
     if len(rsyncd_users) > 0:
       secret_names.append({
-        '/etc/rsyncd.secrets': [{
-          'context': {
-            'rsync_pillar_users': rsyncd_users,
-          }
-        }]
+        '/etc/rsyncd.secrets': [
+          { 'context': {
+              'rsync_pillar_users': rsyncd_users,
+            }
+          },
+          {'require_in': ['rsyncd_service']},
+          {'watch_in':   ['rsyncd_service']},
+        ]
       })
 
     for instance_name, instance_config in rsyncd_instances.items():
@@ -66,71 +75,78 @@ def run():
       instance_modules  = instance_config.get('modules', {})
       instance_users    = instance_config.get('users', {})
 
+      instance_service_state = instance_service_state_name(instance_name)
+
       if len(instance_modules) > 0:
         config_names.append({
-          config_filename: [{
-            'context': {
-              'rsync_pillar_defaults': instance_defaults,
-              'rsync_pillar_modules': instance_modules,
-            }
-          }]
+          config_filename: [
+            {'context': {
+                'rsync_pillar_defaults': instance_defaults,
+                'rsync_pillar_modules': instance_modules,
+              },
+            },
+            {'require_in': [instance_service_state]},
+            {'watch_in':   [instance_service_state]},
+          ]
         })
 
       if len(instance_users) > 0:
         secret_names.append({
-         secrets_filename: [{
-            'context': {
-              'rsync_pillar_users': instance_users,
-            }
-          }]
+         secrets_filename: [
+            {'context': {
+                'rsync_pillar_users': instance_users,
+              },
+            },
+            {'require_in': [instance_service_state]},
+            {'watch_in':   [instance_service_state]},
+          ]
         })
 
-    config['rsyncd_config'] = {
-      'file.managed': [
-        {'user': 'root'},
-        {'group': 'root'},
-        {'mode': '0644'},
-        {'template': 'jinja'},
-        {'requires': ['rsyncd_packages']},
-        {'source': 'salt://profile-base/files/etc/rsyncd.conf.j2'},
-        {'names': config_names},
-      ]
-    }
+    if len(config_names) > 0:
+      config['rsyncd_config'] = {
+        'file.managed': [
+          {'user': 'root'},
+          {'group': 'root'},
+          {'mode': '0644'},
+          {'template': 'jinja'},
+          {'requires': ['rsyncd_packages']},
+          {'source': 'salt://profile-base/files/etc/rsyncd.conf.j2'},
+          {'names': config_names},
+        ]
+      }
 
-    config['rsyncd_secrets'] = {
-      'file.managed': [
-        {'user': 'root'},
-        {'group': 'root'},
-        {'mode': '0600'},
-        {'template': 'jinja'},
-        {'requires': ['rsyncd_packages']},
-        {'source': 'salt://profile-base/files/etc/rsyncd.secrets.j2'},
-        {'names': secret_names},
-      ]
-    }
+    if len(secret_names) > 0:
+      config['rsyncd_secrets'] = {
+        'file.managed': [
+          {'user': 'root'},
+          {'group': 'root'},
+          {'mode': '0600'},
+          {'template': 'jinja'},
+          {'requires': ['rsyncd_packages']},
+          {'source': 'salt://profile-base/files/etc/rsyncd.secrets.j2'},
+          {'names': secret_names},
+        ]
+      }
 
     if rsyncd_use_service:
       config['rsyncd_service'] = {
         'service.running': [
           {'name': 'rsyncd.service'},
           {'enable': True},
-          {'watch': ['rsyncd_config']},
-          {'require': ['rsyncd_config']},
         ]
       }
 
       for instance_name, instance_config in rsyncd_instances.items():
+        instance_service_state = instance_service_state_name(instance_name)
         if instance_config.get('use_service', rsyncd_use_service):
-          config[f'rsyncd_service_{instance_name}'] = {
+          config[instance_service_state] = {
             'service.running': [
               {'name': f'rsyncd@{instance_name}.service'},
               {'enable': True},
-              {'watch': ['rsyncd_config']},
-              {'require': ['rsyncd_config']},
             ]
           }
         else:
-          config[f'rsyncd_service_{instance_name}'] = {
+          config[instance_service_state] = {
             'service.dead': [
               {'name': f'rsyncd@{instance_name}.service'},
               {'enable': False},
@@ -150,7 +166,8 @@ def run():
         ]
       }
       for instance_name, instance_config in rsyncd_instances.items():
-        config[f'rsyncd_service_{instance_name}'] = {
+        instance_service_state = instance_service_state_name(instance_name)
+        config[instance_service_state] = {
           'service.dead': [
             {'name': f'rsyncd@{instance_name}.service'},
             {'enable': False},
