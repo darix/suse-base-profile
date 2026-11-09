@@ -57,6 +57,7 @@ include:
   - .dehydrated
   - .apparmor-local-overrides
   - .nsswitch
+  - .pam
   - .sssd
 {%- endif %}
   - .etckeeper
