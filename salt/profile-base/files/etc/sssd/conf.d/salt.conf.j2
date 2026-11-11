@@ -8,7 +8,6 @@
     {%- endfor %}
   {%- else %}
 [sssd]
-config_file_version = 2
     {%- if 'autofs' in pillar.sssd and pillar.sssd.autofs %}
 services = nss, pam, autofs
     {%- else %}
