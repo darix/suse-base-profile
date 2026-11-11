@@ -63,12 +63,28 @@ sssd_pam_enable:
     - name: /usr/sbin/pam-config --add --sss
     - unless: "/usr/bin/grep -q 'pam_sss' /etc/pam.d/common-session-pc"
 
+
+sssd_service:
+  service.running:
+    - name: sssd.service
+    - enable: True
+    - require:
+      - sssd_pam_enable
+      - sssd_config
+    - watch:
+      - sssd_config
+
+{%- if 'autofs' in pillar.sssd and pillar.sssd.autofs %}
 ldap_config_for_autofs:
   file.managed:
     - user: root
     - group: root
     - mode:  0644
     - name: /etc/openldap/ldap.conf
+    - require_in:
+      - sssd_service
+    - watch_in:
+      - sssd_service
     - contents:
       - '#'
       - '# LDAP Defaults'
@@ -88,19 +104,7 @@ ldap_config_for_autofs:
       - 'TLS_CACERT {{ pillar.sssd.ldap_cert }}'
       - 'TLS_REQCERT hard'
 
-sssd_service:
-  service.running:
-    - name: sssd.service
-    - enable: True
-    - require:
-      - sssd_pam_enable
-      - sssd_config
-      - ldap_config_for_autofs
-    - watch:
-      - sssd_config
-      - ldap_config_for_autofs
 
-{%- if 'autofs' in pillar.sssd and pillar.sssd.autofs %}
 nfs_client_packages:
   pkg.installed:
     - pkgs:
