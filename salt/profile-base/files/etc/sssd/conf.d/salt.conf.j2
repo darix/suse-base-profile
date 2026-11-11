@@ -1,6 +1,6 @@
 {%- if 'sssd' in pillar %}
   {%- if 'config' in pillar.sssd %}
-    {%- for section, section_data in pillar.sshd.config.items() %}
+    {%- for section, section_data in pillar.sssd.config.items() %}
 [{{ section }}]
       {%- for key, value in section_data.items() %}
 {{ key }} = {{ value }}
