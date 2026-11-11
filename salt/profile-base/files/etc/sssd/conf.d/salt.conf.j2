@@ -1,10 +1,19 @@
+{%- if 'sssd' in pillar %}
+  {%- if 'config' in pillar.sssd %}
+    {%- for section, section_data in pillar.sshd.config.items() %}
+[{{ section }}]
+      {%- for key, value in section_data.items() %}
+{{ key }} = {{ value }}
+      {%- endfor %}
+    {%- endfor %}
+  {%- else %}
 [sssd]
 config_file_version = 2
-{%- if 'sssd' in pillar and 'autofs' in pillar.sssd and pillar.sssd.autofs %}
+    {%- if 'autofs' in pillar.sssd and pillar.sssd.autofs %}
 services = nss, pam, autofs
-{%- else %}
+    {%- else %}
 services = nss, pam
-{%- endif %}
+    {%- endif %}
 
 domains = {{ pillar.sssd.domain }}
 
@@ -23,12 +32,13 @@ cache_credentials = True
 ldap_search_base = {{ pillar.sssd.ldap_base }}
 ldap_tls_cacertdir = /etc/ssl/certs
 ldap_tls_cacert = {{ pillar.sssd.ldap_cert }}
-{%- if 'sssd' in pillar and 'autofs' in pillar.sssd and pillar.sssd.autofs %}
+    {%- if 'sssd' in pillar and 'autofs' in pillar.sssd and pillar.sssd.autofs %}
 ldap_autofs_map_master_name = auto.master
 ldap_autofs_map_object_class = nisMap
 ldap_autofs_map_name = nisMapName
 ldap_autofs_entry_object_class = nisObject
 ldap_autofs_entry_key = cn
 ldap_autofs_entry_value = nisMapEntry
+    {%- endif %}
+  {%- endif %}
 {%- endif %}
-
