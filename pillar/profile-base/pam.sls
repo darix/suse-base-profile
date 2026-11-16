@@ -9,7 +9,7 @@ pam:
   wtmpdb:
     enable: True
     skip_if: sshd
-{%- for module in ['env',  'limits',  'pwquality',  'systemd',  'umask', ] %}
+{%- for module in ['env', 'limits', 'systemd', 'umask', ] %}
   {{ module }}:
     enable: True
 {%- endfor %}
