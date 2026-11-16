@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+{%- if salt['pillar.get']('use_cron', True) %}
 cron_package:
   pkg.installed:
     - names:
@@ -26,3 +27,4 @@ cron_service:
   service.running:
     - name: cron
     - enable: True
+{%- endif %}
