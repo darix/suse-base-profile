@@ -20,3 +20,4 @@
 include:
   - .zypp
   - .ssh
+  - .pam
