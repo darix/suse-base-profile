@@ -1,0 +1,11 @@
+{%- if 'greeting' in pillar %}
+# {{ pillar.greeting }}
+{%- endif %}
+
+{%- if vars is string %}
+{{ vars }}
+{%- else %}
+{%- for key, value in vars.items() | sort %}
+{{ key }}{{ pillar.get('key_value_separator', '=') }}"{{ value }}"
+{%- endfor %}
+{%- endif %}
