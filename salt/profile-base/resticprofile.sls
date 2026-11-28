@@ -71,21 +71,74 @@ def run():
         {'pkgs': pkgs }
       ]
     }
+    requires = ['resticprofile_packages']
 
     if 'config' in __pillar__['resticprofile']:
-      requires = ['resticprofile_packages']
       config['resticprofile_config'] = {
         'file.serialize': [
           {'name': config_filename},
           {'user': 'root'},
           {'group': 'root'},
           {'mode': '0600'},
-          {'require': requires },
+          {'require': ['resticprofile_packages'] },
           {'dataset': __pillar__['resticprofile']['config']},
           {'serializer': config_format},
           {'serializer_opts': [{'indent': 2}]}
         ]
       }
+      requires.append('resticprofile_config')
+
+    if "credentials" in __pillar__['resticprofile']:
+      minio_client_data = [
+        '{',
+        '  "version": "10",',
+        '  "aliases": {',
+      ]
+
+      credentials_pillar = __salt__['pillar.get']('resticprofile:credentials', {})
+      credentials_count  = len(credentials_pillar)
+      i=0
+
+      for credential_alias, credential_settings in credentials_pillar.items():
+        i += 1
+
+        # Yes this is stupid.
+        # Yes you will want to rewrite it
+        #
+        # But only do it if you can preserve the order. That version thing has to be on top and the serializer puts it at the bottom
+        #
+        if credential_settings['type'] == 'garage':
+          cred_url       = credential_settings['url']
+          cred_accessKey = credential_settings['key_id']
+          cred_secretKey = credential_settings['secret_key']
+
+          minio_client_data.append(f'    "{credential_alias}": {{')
+          minio_client_data.append(f'        "url":"{cred_url}",')
+          minio_client_data.append(f'        "api":"s3v4",')
+          minio_client_data.append(f'        "path":"auto",')
+          minio_client_data.append(f'        "accessKey":"{cred_accessKey}",')
+          minio_client_data.append(f'        "secretKey":"{cred_secretKey}"')
+          if i < credentials_count:
+            minio_client_data.append('    },')
+          else:
+            minio_client_data.append('    }')
+
+      minio_client_data.append('  }')
+      minio_client_data.append('}')
+
+
+      config['resticprofile_minio_config'] = {
+        'file.managed': [
+          {'name': "/etc/resticprofile/minio-client.json"},
+          {'user': 'root'},
+          {'group': 'root'},
+          {'mode': '0600'},
+          {'require': ['resticprofile_packages'] },
+          {'contents': minio_client_data},
+
+        ]
+      }
+      requires.append('resticprofile_minio_config')
 
       for section_name, section_data in __pillar__['resticprofile']['config'].items():
         if section_name in ('global', 'groups'):
