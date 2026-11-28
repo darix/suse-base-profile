@@ -21,3 +21,5 @@ include:
   - .zypp
   - .ssh
   - .pam
+
+greeting: "This file is managed by Salt. Manual changes will be overwritten; update the Salt configuration instead."
